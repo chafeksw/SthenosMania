@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Definiciones de datos
+    // Definiciones de datos (igual que antes)
     const staticModifiers = [
         { name: "Tuck", value: 0.15 }, { name: "Tuck Adv", value: 0.3 },
         { name: "Una Pierna", value: 0.4 }, { name: "Straddle", value: 0.7 },
@@ -68,13 +68,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Estado de la aplicación
     let currentParticipant = "A";
     let difficulty = "amateur";
-    let participantData = { // Almacenará los datos por participante
+    let participantData = {
         A: { tricks: [], directScores: { combos: 0 }, comboAreas: { freestyle: false, statics: false, powermoves: false, balance: false }, comboUnbroken: false, pm_moreThan5Reps: false, difficulty: "amateur" },
         B: { tricks: [], directScores: { combos: 0 }, comboAreas: { freestyle: false, statics: false, powermoves: false, balance: false }, comboUnbroken: false, pm_moreThan5Reps: false, difficulty: "amateur" }
     };
-    let savedScores = { A: null, B: null }; // Para almacenar el resumen final
+    let savedScores = { A: null, B: null };
 
-    let newTrickConfig = { name: "", base: 0, clean: 10, modifierValue: 1, extraPointsValue: 0, powerMoveDetails: {} }; // Para trucos recomendados
+    let newTrickConfig = { name: "", base: 0, clean: 10, modifierValue: 1, extraPointsValue: 0, powerMoveDetails: {} };
     let currentTab = "freestyle";
     let selectedRecommendedTrickName = null;
 
@@ -99,10 +99,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const noTricksMessage = tricksListElement.querySelector('.no-tricks');
     const clearAllTricksButton = document.getElementById('clearAllTricksButton');
 
-    const addTrickGlobalCleanlinessSection = document.getElementById('addTrickGlobalCleanlinessSection');
-    const addTrickTitleElement = document.getElementById('addTrickTitle');
-    const selectedTrickDisplayElement = document.getElementById('selectedTrickDisplay');
-    const cleanlinessGlobalInput = document.getElementById('cleanlinessGlobal');
+    // Controles para añadir trucos recomendados (sección movible)
+    const recommendedTrickAddControlsSection = document.getElementById('recommendedTrickAddControlsSection');
+    const addRecommendedTrickTitleElement = document.getElementById('addRecommendedTrickTitle');
+    const selectedRecommendedTrickDisplayElement = document.getElementById('selectedRecommendedTrickDisplay');
+    const cleanlinessRecommendedInput = document.getElementById('cleanlinessRecommended');
     const addRecommendedTrickButton = document.getElementById('addRecommendedTrickButton');
     
     const staticModifierSelect = document.getElementById('staticModifier');
@@ -128,7 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
         difficultySelect.addEventListener('change', (e) => {
             difficulty = e.target.value;
             participantData[currentParticipant].difficulty = difficulty;
-            updateAllScoresAndUI();
+            updateAllScoresAndUI(); // Recalcular scores si cambia la dificultad
             showToast("Dificultad actualizada", "info");
         });
 
@@ -167,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAllScoresAndUI();
         });
 
-        // Combos
         ['Freestyle', 'Statics', 'Powermoves', 'Balance'].forEach(area => {
             document.getElementById(`combo${area}`).addEventListener('change', e => {
                 participantData[currentParticipant].comboAreas[area.toLowerCase()] = e.target.checked;
@@ -187,9 +187,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         addRecommendedTrickButton.addEventListener('click', handleAddRecommendedTrickToList);
         
-        // Event listeners para añadir trucos personalizados
         ['Freestyle', 'Statics', 'Powermoves', 'Balance'].forEach(area => {
-            document.getElementById(`addCustom${area}TrickButton`).addEventListener('click', () => handleAddCustomTrick(area.toLowerCase()));
+            document.getElementById(`addCustom${capitalize(area)}TrickButton`).addEventListener('click', () => handleAddCustomTrick(area.toLowerCase()));
         });
 
         clearAllTricksButton.addEventListener('click', () => {
@@ -203,29 +202,34 @@ document.addEventListener('DOMContentLoaded', () => {
         saveParticipantScoreButton.addEventListener('click', handleSaveParticipantScore);
         downloadCsvButton.addEventListener('click', handleDownloadCsv);
         judgeNextParticipantButton.addEventListener('click', () => {
-            scoreSummarySection.style.display = 'none'; // Ocultar resumen
-            // No cambiar de participante aquí, permitir modificar o cambiar manualmente
+            scoreSummarySection.style.display = 'none';
+            scoreSummarySection.classList.remove('visible'); // Para animación
         });
         
-        loadParticipantState(currentParticipant); // Cargar estado inicial
+        loadParticipantState(currentParticipant);
         updateCurrentParticipantIdDisplay();
     }
 
     // --- MANEJO DE PARTICIPANTE Y ESTADO ---
     function switchParticipant(participantId) {
-        if (currentParticipant === participantId && !scoreSummarySection.style.display === 'none') return; // Si ya está en resumen, no hacer nada extra
+        if (currentParticipant === participantId && !scoreSummarySection.style.display === 'none') return;
         
         if (scoreSummarySection.style.display !== 'none' && savedScores[currentParticipant]) {
-             // Si el resumen está visible y guardado, simplemente cambia de participante
-        } else if (participantData[currentParticipant].tricks.length > 0) {
-            // Si hay trucos y no se ha guardado, preguntar
-            if (!confirm(`Tens canvis sense guardar per al Participant ${currentParticipant}. Segur que vols canviar de participant i descartar-los?`)) {
+            // Ok to switch if already saved and summary is shown
+        } else if (participantData[currentParticipant].tricks.length > 0 || participantData[currentParticipant].directScores.combos > 0) {
+            // Check for any meaningful score data
+            if (!confirm(`Tens dades per al Participant ${currentParticipant}. Si canvies sense guardar, es perdran les puntuacions no finalitzades d'aquest participant. Vols continuar?`)) {
                 return;
             }
         }
 
+        // Ocultar y resetear el estado del panel de añadir truco recomendado antes de cambiar de pestaña o participante
+        hideAndResetRecommendedControls();
+
         currentParticipant = participantId;
         scoreSummarySection.style.display = 'none'; // Ocultar resumen al cambiar
+        scoreSummarySection.classList.remove('visible');
+
         loadParticipantState(currentParticipant);
         updateParticipantButtonsUI();
         updateCurrentParticipantIdDisplay();
@@ -233,27 +237,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function loadParticipantState(participantId) {
-        // Cargar dificultad
         difficulty = participantData[participantId].difficulty;
         difficultySelect.value = difficulty;
 
-        // Cargar checkboxes de combo y PM > 5 reps
         document.getElementById('pm_more_than_5_reps').checked = participantData[participantId].pm_moreThan5Reps;
         Object.keys(participantData[participantId].comboAreas).forEach(areaKey => {
             document.getElementById(`combo${capitalize(areaKey)}`).checked = participantData[participantId].comboAreas[areaKey];
         });
         document.getElementById('comboUnbroken').checked = participantData[participantId].comboUnbroken;
 
-        // Limpiar inputs de trucos personalizados (se rellenan si editas, pero al cambiar de P se limpian)
         ['Freestyle', 'Statics', 'Powermoves', 'Balance'].forEach(area => {
             document.getElementById(`custom${capitalize(area)}TrickName`).value = '';
             document.getElementById(`custom${capitalize(area)}TrickCost`).value = '';
             document.getElementById(`custom${capitalize(area)}TrickCleanliness`).value = 10;
         });
 
-        resetNewRecommendedTrickState(); // Limpia la selección de truco recomendado
-        setCurrentTab(currentTab); // Para refrescar UI de la pestaña actual, por si acaso
-        updateAllScoresAndUI(); // Recalcula y actualiza toda la UI con los datos del nuevo participante
+        // No llamar a resetNewRecommendedTrickState() aquí directamente, 
+        // se llama en setCurrentTab y al seleccionar un truco.
+        // Pero sí asegurar que el panel de añadir recomendado está oculto inicialmente.
+        hideAndResetRecommendedControls();
+        
+        setCurrentTab(currentTab); // Refresca la UI de la pestaña actual
+        updateAllScoresAndUI(); 
     }
 
     function updateParticipantButtonsUI() {
@@ -264,62 +269,75 @@ document.addEventListener('DOMContentLoaded', () => {
         currentParticipantIdDisplay.textContent = currentParticipant;
     }
 
-
     function setCurrentTab(tabName) {
+        // Antes de cambiar de pestaña, ocultar los controles de añadir truco recomendado
+        hideAndResetRecommendedControls();
+
         currentTab = tabName;
         tabTriggers.forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === tabName));
         tabContents.forEach(c => {
             const isActive = c.id === `tabContent${capitalize(tabName)}`;
             if (isActive && c.style.display !== 'block') {
                 c.style.display = 'block';
-                c.style.animation = 'fadeInSlideUp 0.3s ease-out forwards';
+                // Trigger reflow for animation
+                void c.offsetWidth; 
+                c.classList.add('active-tab-content-animation');
             } else if (!isActive) {
                 c.style.display = 'none';
+                c.classList.remove('active-tab-content-animation');
             }
         });
         
-        resetNewRecommendedTrickState();
+        // No llamar a resetNewRecommendedTrickState() aquí directamente,
+        // sino asegurar que los controles están listos/ocultos por hideAndResetRecommendedControls.
+        // updateUIForCurrentTab se encargará de mostrar los controles si algo se selecciona en la nueva pestaña.
         updateUIForCurrentTab();
     }
     
-    function resetNewRecommendedTrickState() { // Para trucos de la lista
+    function hideAndResetRecommendedControls() {
+        if (recommendedTrickAddControlsSection.parentNode) {
+            // Lo devolvemos a su sitio original (fuera del DOM visible) o a un contenedor oculto si es necesario
+            // Por ahora, simplemente lo ocultamos y reseteamos estado.
+            document.body.appendChild(recommendedTrickAddControlsSection); // Moverlo fuera de placeholders
+        }
+        recommendedTrickAddControlsSection.style.display = 'none';
         selectedRecommendedTrickName = null;
         newTrickConfig = { name: "", base: 0, clean: 10, modifierValue: 1, extraPointsValue: 0, powerMoveDetails: {} };
-        cleanlinessGlobalInput.value = 10;
+        cleanlinessRecommendedInput.value = 10;
+        selectedRecommendedTrickDisplayElement.textContent = "Selecciona un truc de la llista.";
 
-        selectedStaticModifier = staticModifiers.find(m => m.name === "Full").value;
-        staticModifierSelect.value = selectedStaticModifier;
-        selectedStaticExtra = 0;
-        staticExtraPointsSelect.value = selectedStaticExtra;
-        staticSuperExtraPointsSelect.value = selectedStaticExtra;
-
+        // Desmarcar botones de trucos recomendados en todas las pestañas
         document.querySelectorAll('.recommended-tricks-grid .button.selected').forEach(btn => btn.classList.remove('selected'));
-        updateUIForCurrentTab();
     }
+
 
     function updateUIForCurrentTab() {
-        // Mostrar sección de añadir truco recomendado globalmente
-        const showRecommendedTrickAdder = (currentTab !== 'combos' && (defaultTricksByTab[currentTab]?.length > 0 || currentTab === 'powermoves'));
-        addTrickGlobalCleanlinessSection.style.display = showRecommendedTrickAdder ? 'block' : 'none';
+        // La visibilidad de recommendedTrickAddControlsSection se maneja al seleccionar un truco.
+        // Aquí principalmente manejamos los modificadores específicos de pestañas.
+        const isStaticTrickSelected = currentTab === 'statics' && selectedRecommendedTrickName;
+        if (isStaticTrickSelected) {
+            const isSuper = defaultTricksByTab.statics.find(t => t.name === selectedRecommendedTrickName)?.isSuper;
+            staticsModifiersSection.style.display = !isSuper ? 'block' : 'none';
+            staticsSuperMessage.style.display = isSuper ? 'block' : 'none';
+        } else {
+            staticsModifiersSection.style.display = 'none';
+            staticsSuperMessage.style.display = 'none';
+        }
 
-        if (showRecommendedTrickAdder) {
-            addTrickTitleElement.textContent = `Afegir Truc Recomanat (${capitalize(currentTab)})`;
-            const isTrickSelected = selectedRecommendedTrickName || (currentTab === 'powermoves' && pm_staticElement);
-            selectedTrickDisplayElement.style.display = isTrickSelected ? 'block' : 'none';
-            addRecommendedTrickButton.style.display = isTrickSelected ? 'block' : 'none';
-
-            if (isTrickSelected) {
-                selectedTrickDisplayElement.textContent = selectedRecommendedTrickName ?
-                    `Seleccionat: ${newTrickConfig.name} (Base: ${newTrickConfig.base})` :
-                    `PM Configurat: ${capitalize(pm_category)} - ${capitalize(pm_exercise)} - ${pm_staticElement.originalStatic}`;
+        const isPowerMoveConfigured = currentTab === 'powermoves' && pm_staticElement;
+         if(isPowerMoveConfigured) {
+            // Mostrar y actualizar el panel de añadir recomendado para el PM configurado
+            const placeholder = document.getElementById(`${currentTab}RecommendedControlsPlaceholder`);
+            if (placeholder) {
+                placeholder.appendChild(recommendedTrickAddControlsSection);
+                recommendedTrickAddControlsSection.style.display = 'block';
+                addRecommendedTrickTitleElement.textContent = `Afegir PowerMove Configurat`;
+                selectedRecommendedTrickDisplayElement.textContent = `PM: ${capitalize(pm_category)} ${pm_exercise} ${pm_staticElement.originalStatic}`;
             }
         }
-        
-        // Visibilidad de modificadores de estáticos
-        staticsModifiersSection.style.display = (currentTab === 'statics' && selectedRecommendedTrickName && !defaultTricksByTab.statics.find(t=>t.name === selectedRecommendedTrickName)?.isSuper) ? 'block' : 'none';
-        staticsSuperMessage.style.display = (currentTab === 'statics' && selectedRecommendedTrickName && defaultTricksByTab.statics.find(t=>t.name === selectedRecommendedTrickName)?.isSuper) ? 'block' : 'none';
+        // Si no hay un PM configurado Y no hay un truco recomendado seleccionado, el panel global debe estar oculto.
+        // Esto se maneja en hideAndResetRecommendedControls y al seleccionar un truco recomendado.
     }
-
 
     function populateSelect(selectElement, options, textFn, valueFn) {
         if (!selectElement) return;
@@ -336,53 +354,61 @@ document.addEventListener('DOMContentLoaded', () => {
         const container = document.getElementById(`${tabKey}RecommendedTricks`);
         if (!container || !defaultTricksByTab[tabKey]) return;
 
-        // Ordenar trucos por 'base' de mayor a menor
         const sortedTricks = [...defaultTricksByTab[tabKey]].sort((a, b) => b.base - a.base);
         
-        container.innerHTML = ''; // Limpiar antes de repoblar
+        container.innerHTML = '';
         sortedTricks.forEach(trick => {
             const button = document.createElement('button');
             button.classList.add('button');
             button.textContent = `${trick.name} (Base: ${trick.base}) ${trick.isSuper ? "[S]" : ""}`;
             button.addEventListener('click', () => {
+                // Primero, deseleccionar cualquier otro truco en cualquier otra pestaña y ocultar controles
+                hideAndResetRecommendedControls();
+
                 selectedRecommendedTrickName = trick.name; 
-                pm_staticElement = null; // Deseleccionar PM si se selecciona un truco normal
+                pm_staticElement = null; 
                 
                 newTrickConfig.name = trick.name;
                 newTrickConfig.base = trick.base;
-                // newTrickConfig.clean se tomará de cleanlinessGlobalInput al añadir
                 
+                // Desmarcar botón previo en esta misma grid
                 container.querySelectorAll('.button.selected').forEach(btn => btn.classList.remove('selected'));
-                button.classList.add('selected');
+                button.classList.add('selected'); // Marcar el nuevo
+
+                // Mover y mostrar la sección de controles al placeholder de la pestaña actual
+                const placeholder = document.getElementById(`${tabKey}RecommendedControlsPlaceholder`);
+                if (placeholder) {
+                    placeholder.appendChild(recommendedTrickAddControlsSection);
+                    recommendedTrickAddControlsSection.style.display = 'block';
+                    addRecommendedTrickTitleElement.textContent = `Afegir Truc Recomanat (${capitalize(tabKey)})`;
+                    selectedRecommendedTrickDisplayElement.textContent = `Seleccionat: ${trick.name} (Base: ${trick.base})`;
+                }
+
 
                 if (tabKey === 'statics') {
                     const isSuper = trick.isSuper === true;
                     if (isSuper && staticsSuperMessage.querySelector('p')) {
                          staticsSuperMessage.querySelector('p').textContent = `Supertruc: ${trick.base}p base. No s'apliquen mod. de posició.`;
                     }
-                    // Resetear mod/extra al seleccionar nuevo truco estático
                     selectedStaticModifier = staticModifiers.find(m => m.name === "Full").value;
                     staticModifierSelect.value = selectedStaticModifier;
                     selectedStaticExtra = 0;
                     staticExtraPointsSelect.value = selectedStaticExtra;
-                    staticSuperExtraPointsSelect.value = selectedStaticExtra; // Asegurar reset
+                    staticSuperExtraPointsSelect.value = selectedStaticExtra;
                 }
-                updateUIForCurrentTab();
+                updateUIForCurrentTab(); // Actualiza visibilidad de modificadores de estáticos, etc.
             });
             container.appendChild(button);
         });
     }
 
     // --- LÓGICA DE CÁLCULO Y ADICIÓN DE TRUCOS ---
-    function getDifficultyMultiplierVal() { // Renombrado para claridad
+    function getDifficultyMultiplierVal() {
         const multipliers = { beginner: 1.5, amateur: 1, professional: 0.75 };
         return multipliers[difficulty] || 1;
     }
     
     function addTrickToParticipant(trickData) {
-        // trickData ahora debe incluir todos los detalles para la tabla resumen
-        // nameForRepetition, displayName, area, basePoints, cleanScore, 
-        // difficultyMultiplierApplied, repetitionFactor, staticModifierName, staticModifierValue, extraPointsValue, finalScore
         participantData[currentParticipant].tricks.push(trickData);
         updateAllScoresAndUI();
         showToast(`"${trickData.displayName}" afegit!`, "success");
@@ -395,13 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
              return;
         }
 
-        const cleanVal = parseInt(cleanlinessGlobalInput.value) || 10;
+        const cleanVal = parseInt(cleanlinessRecommendedInput.value) || 10; // Usar el input renombrado
         const difficultyMult = getDifficultyMultiplierVal();
         let trickDetails = {
             area: currentTab,
             cleanScore: cleanVal,
             difficultyMultiplierApplied: difficultyMult,
-            repetitionFactor: 1, // Se calculará después
+            repetitionFactor: 1,
             staticModifierName: 'N/A', staticModifierValue: 1,
             extraPointsValue: 0,
         };
@@ -426,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const staticInfoForPM = baseStatics[pm_staticElement.originalStatic];
             trickDetails.isPowerMove = true;
             trickDetails.nameForRepetition = `PM-${pm_category}-${pm_exercise}-${pm_staticElement.originalStatic}`;
-            trickDetails.basePoints = staticInfoForPM / 3; // Base por repetición
+            trickDetails.basePoints = staticInfoForPM / 3;
             
             trickDetails.staticModifierValue = selectedPowerMoveModifier;
             trickDetails.staticModifierName = staticModifiers.find(m => m.value === selectedPowerMoveModifier)?.name || 'Full';
@@ -443,10 +469,11 @@ document.addEventListener('DOMContentLoaded', () => {
             trickDetails.displayName = selectedRecommendedTrickName;
         }
         
-        addTrickToParticipant(trickDetails); // El score final se calculará en updateAllScores
+        addTrickToParticipant(trickDetails);
         
-        if (currentTab === "powermoves") { pm_staticElement = null; buildPowerMoveSelectors(); } // Reset PM config parcial
-        resetNewRecommendedTrickState();
+        // Después de añadir, ocultar y resetear los controles de añadir truco recomendado
+        hideAndResetRecommendedControls();
+        if (currentTab === "powermoves") { pm_staticElement = null; buildPowerMoveSelectors(); }
     }
 
     function handleAddCustomTrick(area) {
@@ -470,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
             basePoints: trickCost,
             cleanScore: cleanVal,
             difficultyMultiplierApplied: difficultyMult,
-            repetitionFactor: 1, // Se calculará después
+            repetitionFactor: 1,
             staticModifierName: 'N/A', staticModifierValue: 1,
             extraPointsValue: 0,
             isCustom: true,
@@ -479,8 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (area === "powermoves") trickDetails.isPowerMove = true;
         
         addTrickToParticipant(trickDetails);
-
-        nameInput.value = ''; costInput.value = ''; cleanlinessInput.value = 10; // Reset inputs
+        nameInput.value = ''; costInput.value = ''; cleanlinessInput.value = 10;
     }
 
     function removeTrick(index) {
@@ -500,28 +526,29 @@ document.addEventListener('DOMContentLoaded', () => {
             const countForThisInstance = runningTrickCounts[trickRepetitionId];
 
             let currentRepetitionFactor = 1;
-            if (trick.area === "powermoves" || trick.area === "freestyle" || trick.area === "balance" || (trick.isCustom && trick.area === "statics")) {
+            // Aplicar penalización a Freestyle, Statics, Powermoves, Balance
+            if (trick.area === "powermoves" || trick.area === "freestyle" || trick.area === "balance" || trick.area === "statics") {
                 if (countForThisInstance === 2) currentRepetitionFactor = 0.66;
                 else if (countForThisInstance === 3) currentRepetitionFactor = 0.33;
                 else if (countForThisInstance > 3) currentRepetitionFactor = 0;
             }
 
             let score = trick.basePoints;
-            if (trick.isPowerMove || (trick.area === "statics" && !trick.isSuperStatic)) {
+            if (trick.isPowerMove || (trick.area === "statics" && !trick.isSuperStatic && !trick.isCustom)) { // Custom statics no usan modif. de lista
                 score *= trick.staticModifierValue;
             }
             
             score *= trick.difficultyMultiplierApplied;
             score *= (trick.cleanScore / 10);
             score += trick.extraPointsValue;
-            score *= currentRepetitionFactor; // Aplicar penalización por repetición
+            score *= currentRepetitionFactor;
             
             recalculatedTricks.push({ ...trick, finalScore: Math.max(0, score), repetitionFactor: currentRepetitionFactor });
         }
         participantData[currentParticipant].tricks = recalculatedTricks;
         
         Object.keys(descriptions).forEach(key => updateAreaSubtotal(key));
-        updateAreaSubtotal('combos'); // Asegurar que combos se actualice
+        updateAreaSubtotal('combos');
         renderTricksList();
         updateTotalScore();
     }
@@ -547,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (maxScoresPerArea[areaKey] !== undefined && score > maxScoresPerArea[areaKey]) {
                 score = maxScoresPerArea[areaKey];
             }
-            if (areaKey === "combos") { // Actualizar el valor en el estado para que el total sea correcto
+            if (areaKey === "combos") {
                 participantData[currentParticipant].directScores.combos = score;
             }
             subtotalElement.textContent = score.toFixed(2);
@@ -565,40 +592,28 @@ document.addEventListener('DOMContentLoaded', () => {
         
         participantData[currentParticipant].directScores.combos = Math.min(comboScoreFromCheckboxes, maxScoresPerArea.combos);
         
-        updateAreaSubtotal('combos'); // Actualizará el subtotal y aplicará cap si es necesario
+        updateAreaSubtotal('combos');
         updateTotalScore();
     }
 
     function updateTotalScore() {
         let total = 0;
-        ['freestyle', 'statics', 'powermoves', 'balance'].forEach(areaKey => {
-            let areaScore = getAreaScore(areaKey); // Esto ya usa los `finalScore` de los trucos
-            if (areaKey === "powermoves" && participantData[currentParticipant].pm_moreThan5Reps) {
-                areaScore += 1;
-            }
-            // El cap se aplica al obtener el subtotal que se muestra, y aquí sumamos esos subtotales ya capados.
-            // O mejor, recalcular el total sumando scores de trucos y luego aplicar caps a subtotales ANTES de sumar al total.
-            // La función getAreaScore devuelve el score de los trucos. El cap se aplica en updateAreaSubtotal para la UI.
-            // Para el total, debemos sumar los scores individuales y luego aplicar caps a los subtotales de área.
-            // No, más simple: sumar los subtotales ya capados que se muestran.
+        ['freestyle', 'statics', 'powermoves', 'balance', 'combos'].forEach(areaKey => {
             const subtotalElement = document.getElementById(`${areaKey}Subtotal`);
             if(subtotalElement) total += parseFloat(subtotalElement.textContent) || 0;
-
         });
-        total += (parseFloat(document.getElementById('combosSubtotal').textContent) || 0);
-        
         totalScoreDisplay.textContent = total.toFixed(2);
     }
 
     function renderTricksList() {
-        tricksListElement.innerHTML = ''; // Limpiar antes de añadir
+        tricksListElement.innerHTML = ''; 
         const currentTricks = participantData[currentParticipant].tricks;
         tricksCountElement.textContent = currentTricks.length;
 
         if (currentTricks.length === 0) {
             if (noTricksMessage) {
                 noTricksMessage.style.display = 'block';
-                tricksListElement.appendChild(noTricksMessage); // Asegurar que está dentro si la lista se vacía
+                tricksListElement.appendChild(noTricksMessage);
             }
             return;
         }
@@ -609,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
             li.innerHTML = `
                 <div class="trick-info">
                     <span class="trick-name">${trick.displayName} <span class="trick-area-badge">${trick.area}</span></span>
-                    <span class="trick-details">Base: ${trick.basePoints.toFixed(2)}, Neteja: ${trick.cleanScore}/10, Score: ${trick.finalScore.toFixed(2)}</span>
+                    <span class="trick-details">Base: ${trick.basePoints.toFixed(2)}, Neteja: ${trick.cleanScore}/10, Rep. x${trick.repetitionFactor.toFixed(2)}, Score: ${trick.finalScore.toFixed(2)}</span>
                 </div>
                 <button class="button button-destructive small-btn" data-index="${index}" title="Eliminar truc">✕</button>
             `;
@@ -618,7 +633,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // --- PowerMove Selectors (similar a antes, adaptado) ---
     function buildPowerMoveSelectors() {
         const container = document.getElementById('powermoveSelectorContainer');
         if (!container) return;
@@ -630,6 +644,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const categorySelect = createSelectForPM(Object.keys(defaultTricksByTab.powermoves), "1. Tipus", pm_category, (val) => {
             pm_category = val; pm_exercise = null; pm_staticElement = null; selectedRecommendedTrickName = null;
+            hideAndResetRecommendedControls(); // Ocultar panel de añadir si se cambia config de PM
             buildPowerMoveSelectors(); updateUIForCurrentTab();
         });
         container.appendChild(categorySelect);
@@ -638,6 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const exercises = Object.keys(defaultTricksByTab.powermoves[pm_category]);
             const exerciseSelect = createSelectForPM(exercises, "2. Exercici", pm_exercise, (val) => {
                 pm_exercise = val; pm_staticElement = null; selectedRecommendedTrickName = null;
+                hideAndResetRecommendedControls();
                 buildPowerMoveSelectors(); updateUIForCurrentTab();
             });
             container.appendChild(exerciseSelect);
@@ -646,7 +662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pm_category && pm_exercise && defaultTricksByTab.powermoves[pm_category][pm_exercise]) {
             const staticElementsForPM = defaultTricksByTab.powermoves[pm_category][pm_exercise];
             const staticElementSelect = document.createElement('select');
-            staticElementSelect.classList.add('select', 'modern-select'); // Añadir clase modern-select
+            staticElementSelect.classList.add('select', 'modern-select');
             
             const placeholderOpt = document.createElement('option');
             placeholderOpt.value = ""; placeholderOpt.textContent = "3. Element Base";
@@ -663,15 +679,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
             staticElementSelect.addEventListener('change', (e) => {
                 const selectedName = e.target.value;
-                selectedRecommendedTrickName = null;
+                selectedRecommendedTrickName = null; // PM no es un truco recomendado simple
                 if (selectedName) {
                     pm_staticElement = staticElementsForPM.find(s => s.originalStatic === selectedName) || null;
                     if (pm_staticElement) {
                         selectedPowerMoveModifier = staticModifiers.find(m => m.name === "Full").value;
                         selectedPowerMoveExtra = 0;
+                        // Mostrar panel de añadir recomendado para el PM configurado
+                        const placeholder = document.getElementById(`powermovesRecommendedControlsPlaceholder`);
+                        if (placeholder) {
+                            placeholder.appendChild(recommendedTrickAddControlsSection);
+                            recommendedTrickAddControlsSection.style.display = 'block';
+                            addRecommendedTrickTitleElement.textContent = `Afegir PowerMove Configurat`;
+                            selectedRecommendedTrickDisplayElement.textContent = `PM: ${capitalize(pm_category)} ${pm_exercise} ${pm_staticElement.originalStatic}`;
+                        }
+                    } else {
+                         hideAndResetRecommendedControls(); // Si se deselecciona el elemento base
                     }
-                } else { pm_staticElement = null; }
-                buildPowerMoveSelectors(); updateUIForCurrentTab();
+                } else { pm_staticElement = null; hideAndResetRecommendedControls(); }
+                buildPowerMoveSelectors(); // Reconstruir para mostrar/ocultar mod/extra
+                updateUIForCurrentTab();
             });
             container.appendChild(staticElementSelect);
         }
@@ -690,9 +717,9 @@ document.addEventListener('DOMContentLoaded', () => {
         updateUIForCurrentTab();
     }
     
-    function createSelectForPM(optionsArray, placeholderText, currentValue, onChangeCallback) { // Adaptado para PM
+    function createSelectForPM(optionsArray, placeholderText, currentValue, onChangeCallback) {
         const select = document.createElement('select');
-        select.classList.add('select', 'modern-select'); // Añadir clase modern-select
+        select.classList.add('select', 'modern-select');
         const placeholder = document.createElement('option');
         placeholder.value = ""; placeholder.textContent = placeholderText;
         if (!currentValue) { placeholder.selected = true; placeholder.disabled = true; }
@@ -707,9 +734,9 @@ document.addEventListener('DOMContentLoaded', () => {
         select.addEventListener('change', (e) => onChangeCallback(e.target.value));
         return select;
     }
-    function createSelectWithOptionsForPM(optionsData, currentValue, textFn, valueFn, onChangeCallback) { // Adaptado para PM
+    function createSelectWithOptionsForPM(optionsData, currentValue, textFn, valueFn, onChangeCallback) {
         const select = document.createElement('select');
-        select.classList.add('select', 'modern-select'); // Añadir clase modern-select
+        select.classList.add('select', 'modern-select');
         optionsData.forEach(item => {
             const option = document.createElement('option');
             option.value = valueFn(item); option.textContent = textFn(item);
@@ -720,41 +747,37 @@ document.addEventListener('DOMContentLoaded', () => {
         return select;
     }
 
-    // --- GUARDAR Y DESCARGAR ---
     function handleSaveParticipantScore() {
         if (participantData[currentParticipant].tricks.length === 0 && participantData[currentParticipant].directScores.combos === 0) {
             showToast(`No hi ha puntuacions per guardar per al Participant ${currentParticipant}.`, "error");
             return;
         }
-
-        // Guardar el estado actual para el resumen (incluye subtotales y total)
         const summaryData = {
             participantId: currentParticipant,
             difficulty: difficulty,
             difficultyMultiplier: getDifficultyMultiplierVal(),
-            tricks: JSON.parse(JSON.stringify(participantData[currentParticipant].tricks)), // Copia profunda
+            tricks: JSON.parse(JSON.stringify(participantData[currentParticipant].tricks)),
             subtotals: {},
             pmBonus: participantData[currentParticipant].pm_moreThan5Reps ? 1 : 0,
             grandTotal: 0,
         };
-
         ['freestyle', 'statics', 'powermoves', 'balance', 'combos'].forEach(area => {
             summaryData.subtotals[area] = parseFloat(document.getElementById(`${area}Subtotal`).textContent) || 0;
         });
         summaryData.grandTotal = parseFloat(totalScoreDisplay.textContent) || 0;
         
-        savedScores[currentParticipant] = summaryData; // Almacenar el resumen
+        savedScores[currentParticipant] = summaryData;
         
         displayScoreSummary(currentParticipant);
         scoreSummarySection.style.display = 'block';
+        scoreSummarySection.classList.add('visible'); // Para animación
         scoreSummarySection.scrollIntoView({ behavior: 'smooth' });
-        showToast(`Puntuació del Participant ${currentParticipant} finalitzada i llista per descarregar.`, "success");
+        showToast(`Puntuació del Participant ${currentParticipant} finalitzada.`, "success");
     }
 
     function displayScoreSummary(participantId) {
         const summary = savedScores[participantId];
         if (!summary) return;
-
         summaryParticipantNameElement.textContent = `Resum Participant ${participantId}`;
         let tableHTML = `
             <table>
@@ -764,8 +787,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <th>Mod.</th><th>Extra</th><th>xDiff</th><th>xRep</th><th>Score Final</th>
                     </tr>
                 </thead>
-                <tbody>
-        `;
+                <tbody>`;
         summary.tricks.forEach(trick => {
             tableHTML += `
                 <tr>
@@ -778,8 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>x${trick.difficultyMultiplierApplied.toFixed(2)}</td>
                     <td>x${trick.repetitionFactor.toFixed(2)}</td>
                     <td><strong>${trick.finalScore.toFixed(2)}</strong></td>
-                </tr>
-            `;
+                </tr>`;
         });
         tableHTML += `</tbody><tfoot>`;
         Object.keys(summary.subtotals).forEach(area => {
@@ -796,65 +817,51 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleDownloadCsv() {
-        const summary = savedScores[currentParticipant]; // Usar el currentParticipant para el que se mostró el resumen
+        const summary = savedScores[currentParticipant];
         if (!summary) {
-            showToast("No hi ha resum per descarregar. Finalitza la puntuació primer.", "error");
-            return;
+            showToast("No hi ha resum per descarregar.", "error"); return;
         }
-
         let csvContent = "data:text/csv;charset=utf-8,";
-        // Encabezados
         csvContent += "Truc,Àrea,Punts Base,Neteja,Modificador Nom,Modificador Valor,Punts Extra,Multiplicador Dificultat,Factor Repetició,Score Final Truc\r\n";
-        // Datos de trucos
         summary.tricks.forEach(trick => {
             const row = [
-                `"${trick.displayName.replace(/"/g, '""')}"`, // Manejar comillas en nombres
-                capitalize(trick.area),
-                trick.basePoints.toFixed(2),
-                `${trick.cleanScore}/10`,
-                trick.staticModifierName,
-                trick.staticModifierValue.toFixed(2),
-                trick.extraPointsValue.toFixed(2),
-                trick.difficultyMultiplierApplied.toFixed(2),
-                trick.repetitionFactor.toFixed(2),
-                trick.finalScore.toFixed(2)
+                `"${trick.displayName.replace(/"/g, '""')}"`, capitalize(trick.area),
+                trick.basePoints.toFixed(2), `${trick.cleanScore}/10`,
+                trick.staticModifierName, trick.staticModifierValue.toFixed(2),
+                trick.extraPointsValue.toFixed(2), trick.difficultyMultiplierApplied.toFixed(2),
+                trick.repetitionFactor.toFixed(2), trick.finalScore.toFixed(2)
             ].join(",");
             csvContent += row + "\r\n";
         });
-        // Líneas de separación y subtotales
-        csvContent += "\r\n"; // Línea vacía
+        csvContent += "\r\n";
         Object.keys(summary.subtotals).forEach(area => {
             let areaDisplayName = capitalize(area);
             if (area === "powermoves" && summary.pmBonus > 0) areaDisplayName += " (+1 Bonus Reps)";
             csvContent += `Subtotal ${areaDisplayName},,,,,,,,,${summary.subtotals[area].toFixed(2)}\r\n`;
         });
-        // Total
         csvContent += `TOTAL PARTICIPANT ${summary.participantId} (Dificultat: ${summary.difficulty}),,,,,,,,,${summary.grandTotal.toFixed(2)}\r\n`;
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
         link.setAttribute("href", encodedUri);
         link.setAttribute("download", `puntuacion_participant_${summary.participantId}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
         showToast("CSV descarregat!", "success");
     }
 
-    // --- Utilidades ---
     function capitalize(s) {
         if (typeof s !== 'string' || !s) return '';
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
-    function showToast(message, type = 'info') { // types: success, error, info
+    function showToast(message, type = 'info') {
         toastNotification.textContent = message;
-        toastNotification.className = 'toast-notification show ' + type;
+        toastNotification.className = 'toast-notification ' + type; // Quita 'show' primero por si acaso
+        void toastNotification.offsetWidth; // Trigger reflow
+        toastNotification.classList.add('show');
+        
         setTimeout(() => {
-            toastNotification.className = 'toast-notification ' + type; // Quita 'show' para animación de salida
+            toastNotification.classList.remove('show');
         }, 3000);
-         setTimeout(() => { // Espera a que termine la animación de salida
-            toastNotification.className = 'toast-notification';
-        }, 3400);
     }
 
     initialize();

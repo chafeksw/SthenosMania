@@ -1,0 +1,2 @@
+# SthenosMania
+SthenosManiaPanelJuez

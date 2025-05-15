@@ -40,15 +40,31 @@
                 </div>
             </div>
 
+            <div id="recommendedTrickAddControlsSection" class="card recommended-trick-add-controls" style="display:none;">
+                <div class="card-content">
+                     <h3 id="addRecommendedTrickTitle">Afegir Truc Recomanat</h3>
+                     <div id="selectedRecommendedTrickDisplay" class="selected-trick-info">Selecciona un truc de la llista.</div>
+                     <div class="input-group">
+                        <label for="cleanlinessRecommended" class="label-modern">Neteja (1-10):</label>
+                        <input type="number" id="cleanlinessRecommended" class="input modern-input" min="1" max="10" value="10">
+                     </div>
+                     <button id="addRecommendedTrickButton" class="button button-primary full-width-btn" style="margin-top: 10px;">Afegir Truc Recomanat</button>
+                </div>
+            </div>
+
             <div id="tabContentFreestyle" class="tab-content active">
                 <div class="card">
                     <div class="card-content">
                         <h2 class="area-title">Freestyle</h2>
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="freestyleSubtotal">0.00</span> punts</p>
-                        <div class="trick-adder-section">
-                             <h3>Trucs Recomanats</h3>
-                             <div id="freestyleRecommendedTricks" class="recommended-tricks-grid"></div>
+                        <div class="recommended-tricks-area">
+                            <div class="trick-adder-section">
+                                 <h3>Trucs Recomanats</h3>
+                                 <div id="freestyleRecommendedTricks" class="recommended-tricks-grid"></div>
+                            </div>
+                            <div id="freestyleRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir Truc Personalitzat</h4>
@@ -69,19 +85,23 @@
                         <h2 class="area-title">Statics</h2>
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="staticsSubtotal">0.00</span> punts</p>
-                        <div class="trick-adder-section">
-                            <h3>Trucs Recomanats</h3>
-                            <div id="staticsRecommendedTricks" class="recommended-tricks-grid"></div>
-                            <div id="staticsModifiersSection" class="modifiers-section" style="display: none;">
-                                <label for="staticModifier" class="label-modern">Modificador Estàtic:</label>
-                                <select id="staticModifier" class="select modern-select"></select>
-                                <label for="staticExtraPoints" class="label-modern">Punts Extra:</label>
-                                <select id="staticExtraPoints" class="select modern-select"></select>
+                        <div class="recommended-tricks-area">
+                            <div class="trick-adder-section">
+                                <h3>Trucs Recomanats</h3>
+                                <div id="staticsRecommendedTricks" class="recommended-tricks-grid"></div>
+                                <div id="staticsModifiersSection" class="modifiers-section" style="display: none;">
+                                    <label for="staticModifier" class="label-modern">Modificador Estàtic:</label>
+                                    <select id="staticModifier" class="select modern-select"></select>
+                                    <label for="staticExtraPoints" class="label-modern">Punts Extra:</label>
+                                    <select id="staticExtraPoints" class="select modern-select"></select>
+                                </div>
+                                 <div id="staticsSuperMessage" class="super-trick-message" style="display: none;">
+                                    <p></p> <label for="staticSuperExtraPoints" class="label-modern">Punts Extra per Supertruc Estàtic:</label>
+                                    <select id="staticSuperExtraPoints" class="select modern-select"></select>
+                                </div>
                             </div>
-                             <div id="staticsSuperMessage" class="super-trick-message" style="display: none;">
-                                <p></p> <label for="staticSuperExtraPoints" class="label-modern">Punts Extra per Supertruc Estàtic:</label>
-                                <select id="staticSuperExtraPoints" class="select modern-select"></select>
-                            </div>
+                            <div id="staticsRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir Truc Personalitzat</h4>
@@ -102,7 +122,12 @@
                         <h2 class="area-title">PowerMoves</h2>
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="powermovesSubtotal">0.00</span> punts</p>
-                        <div id="powermoveSelectorContainer" class="trick-adder-section"></div>
+                        <div class="recommended-tricks-area">
+                            <div id="powermoveSelectorContainer" class="trick-adder-section">
+                                </div>
+                            <div id="powermovesRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
+                        </div>
                          <div class="flex-center-items bonus-checkbox">
                             <input type="checkbox" id="pm_more_than_5_reps" class="custom-checkbox">
                             <label for="pm_more_than_5_reps">Combo de més de 5 repeticions (+1p)</label>
@@ -127,9 +152,13 @@
                         <h2 class="area-title">Balance</h2>
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="balanceSubtotal">0.00</span> punts</p>
-                        <div class="trick-adder-section">
-                             <h3>Trucs Recomanats</h3>
-                             <div id="balanceRecommendedTricks" class="recommended-tricks-grid"></div>
+                        <div class="recommended-tricks-area">
+                            <div class="trick-adder-section">
+                                 <h3>Trucs Recomanats</h3>
+                                 <div id="balanceRecommendedTricks" class="recommended-tricks-grid"></div>
+                            </div>
+                            <div id="balanceRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir Truc Personalitzat</h4>
@@ -161,18 +190,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div id="addTrickGlobalCleanlinessSection" class="card" style="display:none;">
-            <div class="card-content">
-                 <h2 id="addTrickTitle">Afegir Truc Recomanat</h2>
-                 <div id="selectedTrickDisplay" class="selected-trick-info">Selecciona un truc recomanat o configura un PowerMove de la llista.</div>
-                 <div class="input-group">
-                    <label for="cleanlinessGlobal" class="label-modern">Neteja Global per Truc Recomanat (1-10):</label>
-                    <input type="number" id="cleanlinessGlobal" class="input modern-input" min="1" max="10" value="10">
-                 </div>
-                 <button id="addRecommendedTrickButton" class="button button-primary full-width-btn" style="margin-top: 10px;">Afegir Truc Recomanat</button>
             </div>
         </div>
 

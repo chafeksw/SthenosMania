@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sthenos Mania - Puntuació Jutge</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="main-header">
+            <h1>Sthenos Mania</h1>
+            <p class="subtitle">Panel de Puntuación del Juez</p>
+        </header>
+
+        <div class="participant-section">
+            <div class="participant-selector section-controls">
+                <button id="participantA" class="button participant-btn active">Participant A</button>
+                <button id="participantB" class="button participant-btn">Participant B</button>
+            </div>
+            <div class="difficulty-selector section-controls">
+                <label for="difficulty" class="label-modern">Dificultat:</label>
+                <select id="difficulty" class="select modern-select">
+                    <option value="beginner">Principiant (x1.5)</option>
+                    <option value="amateur" selected>Amateur (x1)</option>
+                    <option value="professional">Professional (x0.75)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <div class="tabs-list-container">
+                <div class="tabs-list">
+                    <button class="tab-trigger active" data-tab="freestyle">Freestyle</button>
+                    <button class="tab-trigger" data-tab="statics">Statics</button>
+                    <button class="tab-trigger" data-tab="powermoves">PowerMoves</button>
+                    <button class="tab-trigger" data-tab="balance">Balance</button>
+                    <button class="tab-trigger" data-tab="combos">Combos</button>
+                </div>
+            </div>
+
+            <div id="tabContentFreestyle" class="tab-content active">
+                <div class="card">
+                    <div class="card-content">
+                        <h2 class="area-title">Freestyle</h2>
+                        <p class="area-description"></p>
+                        <p class="area-subtotal">Subtotal: <span id="freestyleSubtotal">0.00</span> punts</p>
+                        <div class="trick-adder-section">
+                             <h3>Trucs Recomanats</h3>
+                             <div id="freestyleRecommendedTricks" class="recommended-tricks-grid"></div>
+                        </div>
+                        <div class="custom-trick-adder">
+                            <h4>Afegir Truc Personalitzat</h4>
+                            <input type="text" id="customFreestyleTrickName" placeholder="Nom del truc" class="input modern-input">
+                            <input type="number" id="customFreestyleTrickCost" placeholder="Cost base" class="input modern-input" min="0" step="0.01">
+                            <div class="input-group-inline">
+                                <label for="customFreestyleTrickCleanliness">Neteja (1-10):</label>
+                                <input type="number" id="customFreestyleTrickCleanliness" class="input modern-input" min="1" max="10" value="10">
+                            </div>
+                            <button id="addCustomFreestyleTrickButton" class="button button-secondary full-width-btn">Afegir Personalitzat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tabContentStatics" class="tab-content">
+                <div class="card">
+                    <div class="card-content">
+                        <h2 class="area-title">Statics</h2>
+                        <p class="area-description"></p>
+                        <p class="area-subtotal">Subtotal: <span id="staticsSubtotal">0.00</span> punts</p>
+                        <div class="trick-adder-section">
+                            <h3>Trucs Recomanats</h3>
+                            <div id="staticsRecommendedTricks" class="recommended-tricks-grid"></div>
+                            <div id="staticsModifiersSection" class="modifiers-section" style="display: none;">
+                                <label for="staticModifier" class="label-modern">Modificador Estàtic:</label>
+                                <select id="staticModifier" class="select modern-select"></select>
+                                <label for="staticExtraPoints" class="label-modern">Punts Extra:</label>
+                                <select id="staticExtraPoints" class="select modern-select"></select>
+                            </div>
+                             <div id="staticsSuperMessage" class="super-trick-message" style="display: none;">
+                                <p></p> <label for="staticSuperExtraPoints" class="label-modern">Punts Extra per Supertruc Estàtic:</label>
+                                <select id="staticSuperExtraPoints" class="select modern-select"></select>
+                            </div>
+                        </div>
+                        <div class="custom-trick-adder">
+                            <h4>Afegir Truc Personalitzat</h4>
+                            <input type="text" id="customStaticsTrickName" placeholder="Nom del truc" class="input modern-input">
+                            <input type="number" id="customStaticsTrickCost" placeholder="Cost base" class="input modern-input" min="0" step="0.01">
+                            <div class="input-group-inline">
+                                <label for="customStaticsTrickCleanliness">Neteja (1-10):</label>
+                                <input type="number" id="customStaticsTrickCleanliness" class="input modern-input" min="1" max="10" value="10">
+                            </div>
+                            <button id="addCustomStaticsTrickButton" class="button button-secondary full-width-btn">Afegir Personalitzat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tabContentPowermoves" class="tab-content">
+                <div class="card">
+                    <div class="card-content">
+                        <h2 class="area-title">PowerMoves</h2>
+                        <p class="area-description"></p>
+                        <p class="area-subtotal">Subtotal: <span id="powermovesSubtotal">0.00</span> punts</p>
+                        <div id="powermoveSelectorContainer" class="trick-adder-section"></div>
+                         <div class="flex-center-items bonus-checkbox">
+                            <input type="checkbox" id="pm_more_than_5_reps" class="custom-checkbox">
+                            <label for="pm_more_than_5_reps">Combo de més de 5 repeticions (+1p)</label>
+                        </div>
+                        <div class="custom-trick-adder">
+                            <h4>Afegir PowerMove Personalitzat</h4>
+                            <p class="small-info">El cost base ha de reflectir la dificultat intrínseca.</p>
+                            <input type="text" id="customPowermovesTrickName" placeholder="Nom del truc" class="input modern-input">
+                            <input type="number" id="customPowermovesTrickCost" placeholder="Cost per rep." class="input modern-input" min="0" step="0.01">
+                            <div class="input-group-inline">
+                               <label for="customPowermovesTrickCleanliness">Neteja (1-10):</label>
+                               <input type="number" id="customPowermovesTrickCleanliness" class="input modern-input" min="1" max="10" value="10">
+                            </div>
+                            <button id="addCustomPowermovesTrickButton" class="button button-secondary full-width-btn">Afegir Personalitzat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tabContentBalance" class="tab-content">
+                <div class="card">
+                    <div class="card-content">
+                        <h2 class="area-title">Balance</h2>
+                        <p class="area-description"></p>
+                        <p class="area-subtotal">Subtotal: <span id="balanceSubtotal">0.00</span> punts</p>
+                        <div class="trick-adder-section">
+                             <h3>Trucs Recomanats</h3>
+                             <div id="balanceRecommendedTricks" class="recommended-tricks-grid"></div>
+                        </div>
+                        <div class="custom-trick-adder">
+                            <h4>Afegir Truc Personalitzat</h4>
+                            <input type="text" id="customBalanceTrickName" placeholder="Nom del truc" class="input modern-input">
+                            <input type="number" id="customBalanceTrickCost" placeholder="Cost base" class="input modern-input" min="0" step="0.01">
+                            <div class="input-group-inline">
+                                <label for="customBalanceTrickCleanliness">Neteja (1-10):</label>
+                                <input type="number" id="customBalanceTrickCleanliness" class="input modern-input" min="1" max="10" value="10">
+                            </div>
+                            <button id="addCustomBalanceTrickButton" class="button button-secondary full-width-btn">Afegir Personalitzat</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tabContentCombos" class="tab-content">
+                <div class="card">
+                    <div class="card-content">
+                        <h2 class="area-title">Combos</h2>
+                        <p class="area-description"></p>
+                        <p class="area-subtotal">Subtotal: <span id="combosSubtotal">0.00</span> punts</p>
+                        <div class="combo-options">
+                            <h3>Marcar àmbits tocats i condicions:</h3>
+                            <div class="checkbox-group"><input type="checkbox" id="comboFreestyle" data-area="freestyle" class="custom-checkbox"> <label for="comboFreestyle">Freestyle (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboStatics" data-area="statics" class="custom-checkbox"> <label for="comboStatics">Statics (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboPowermoves" data-area="powermoves" class="custom-checkbox"> <label for="comboPowermoves">PowerMoves (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboBalance" data-area="balance" class="custom-checkbox"> <label for="comboBalance">Balance (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboUnbroken" class="custom-checkbox"> <label for="comboUnbroken">Unbroken (+2p)</label></div>
+                            <button id="applyComboPenalty" class="button button-destructive small-btn">Neteja Baixa (-1p)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="addTrickGlobalCleanlinessSection" class="card" style="display:none;">
+            <div class="card-content">
+                 <h2 id="addTrickTitle">Afegir Truc Recomanat</h2>
+                 <div id="selectedTrickDisplay" class="selected-trick-info">Selecciona un truc recomanat o configura un PowerMove de la llista.</div>
+                 <div class="input-group">
+                    <label for="cleanlinessGlobal" class="label-modern">Neteja Global per Truc Recomanat (1-10):</label>
+                    <input type="number" id="cleanlinessGlobal" class="input modern-input" min="1" max="10" value="10">
+                 </div>
+                 <button id="addRecommendedTrickButton" class="button button-primary full-width-btn" style="margin-top: 10px;">Afegir Truc Recomanat</button>
+            </div>
+        </div>
+
+        <div class="card results-card">
+            <div class="card-content">
+                <div class="results-header">
+                    <h2>Trucs Realitzats (<span id="tricksCount">0</span>)</h2>
+                    <button id="clearAllTricksButton" class="button button-destructive small-btn" title="Eliminar tots els trucs d'aquest participant">Netejar Tot</button>
+                </div>
+                <ul id="tricksList" class="tricks-list">
+                    <p class="no-tricks">Encara no s'han afegit trucs.</p>
+                </ul>
+            </div>
+        </div>
+
+        <div class="total-score-display">
+            TOTAL PARTICIPANT: <span id="totalScore">0.00</span> PUNTS
+        </div>
+
+        <div class="actions-footer">
+            <button id="saveParticipantScoreButton" class="button button-primary large-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
+                Finalitzar i Guardar Puntuació (<span id="currentParticipantIdDisplay">A</span>)
+            </button>
+        </div>
+
+        <div id="scoreSummarySection" class="score-summary-section card" style="display:none;">
+            <div class="card-content">
+                <h2 id="summaryParticipantName">Resum Participant X</h2>
+                <div id="scoreTableContainer" class="table-responsive">
+                    </div>
+                <button id="downloadCsvButton" class="button button-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path d="M2.5 13.5V12h15v1.5a2 2 0 01-2 2H4.5a2 2 0 01-2-2zm15-3.5H2.5V8A2.5 2.5 0 015 5.5h10A2.5 2.5 0 0117.5 8v2zM5 5.5A2.5 2.5 0 012.5 8v2h15V8a2.5 2.5 0 00-2.5-2.5H5zM10 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clip-rule="evenodd" /><path d="M2 0a2 2 0 00-2 2v16a2 2 0 002 2h16a2 2 0 002-2V2a2 2 0 00-2-2H2zm14.5 13.5V12h-13v1.5a.5.5 0 00.5.5h12a.5.5 0 00.5-.5zm0-3.5h-13V8c0-.827.673-1.5 1.5-1.5h10c.827 0 1.5.673 1.5 1.5v2z" fill-rule="evenodd" /></svg>
+                    Descarregar CSV
+                </button>
+                 <button id="judgeNextParticipantButton" class="button button-primary">Puntuar Següent / Modificar</button>
+            </div>
+        </div>
+
+    </div>
+    <div class="toast-notification" id="toastNotification">Missatge</div>
+    <script src="script.js"></script></body>
+</html>

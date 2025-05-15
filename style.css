@@ -242,8 +242,12 @@ body {
     margin-bottom: 25px;
     border: 1px solid #333;
     overflow: hidden; /* Para que animaciones internas no se salgan */
+    /* animation: fadeInSlideUp 0.4s ease-out; Ya no se aplica a todas las cards */
+}
+.tab-content.active .card { /* Aplicar animación solo a la card de la tab activa */
     animation: fadeInSlideUp 0.4s ease-out;
 }
+
 .card-content {
     padding: 20px;
     display: flex;
@@ -279,8 +283,34 @@ body {
     font-weight: 700;
 }
 
-/* Trick Adder Sections */
-.trick-adder-section h3, .custom-trick-adder h4 {
+/* Recommended Tricks Area Layout */
+.recommended-tricks-area {
+    display: flex;
+    flex-direction: row; /* Por defecto, lado a lado */
+    gap: 20px; /* Espacio entre la lista de trucos y los controles de añadir */
+}
+.recommended-tricks-area .trick-adder-section { /* Contenedor de la rejilla de trucos */
+    flex: 2; /* Que la lista de trucos ocupe más espacio */
+    min-width: 0; /* Para que flexbox pueda encogerlo si es necesario */
+}
+.recommended-controls-placeholder { /* Contenedor donde se insertan los controles de añadir */
+    flex: 1; /* Que los controles ocupen menos espacio */
+    min-width: 280px; /* Un ancho mínimo para que los controles no se aplasten demasiado */
+}
+/* En pantallas más pequeñas, apilar verticalmente */
+@media (max-width: 768px) {
+    .recommended-tricks-area {
+        flex-direction: column; /* Apilar verticalmente */
+    }
+    .recommended-controls-placeholder {
+        min-width: 100%; /* Ocupar todo el ancho */
+        margin-top: 20px;
+    }
+}
+
+
+/* Trick Adder Sections & Custom Trick Adder */
+.trick-adder-section h3, .custom-trick-adder h4, .recommended-trick-add-controls h3 {
     font-weight: 500;
     color: #C0C0C0;
     margin-bottom: 15px;
@@ -291,11 +321,25 @@ body {
     padding-top: 20px;
     border-top: 1px solid #383838;
 }
+/* Estilos para la sección de controles de añadir truco recomendado */
+.recommended-trick-add-controls {
+    background-color: #2a2a2a; /* Un fondo ligeramente diferente */
+    border: 1px solid #3a3a3a;
+    /* margin-bottom se maneja por .card si se usa como card global, o por el gap de flex si está dentro */
+}
+.recommended-trick-add-controls .card-content {
+    padding: 15px; /* Menos padding si está al lado */
+}
+.recommended-trick-add-controls h3 {
+    font-size: 1.1em; /* Título un poco más pequeño */
+    color: #4CAF50;
+}
+
 
 .recommended-tricks-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Ajustar minmax */
+    gap: 10px;
 }
 .recommended-tricks-grid .button {
     background-color: #333;
@@ -304,6 +348,8 @@ body {
     text-align: left;
     font-weight: 400;
     justify-content: flex-start;
+    min-height: 50px; /* Asegurar altura mínima */
+    line-height: 1.3;
 }
 .recommended-tricks-grid .button:hover {
     background-color: #3E3E3E;
@@ -328,18 +374,6 @@ body {
     font-size: 0.85em;
 }
 
-/* Global Add Trick Section (for recommended) */
-#addTrickGlobalCleanlinessSection {
-    /* Estilos ya definidos por .card */
-    /* display: none; es manejado por JS */
-}
-#addTrickGlobalCleanlinessSection h2 { /* Título dentro de la sección de añadir truco global */
-    color: #4CAF50;
-    font-size: 1.3em;
-    margin-bottom: 10px;
-    padding-bottom: 5px;
-    border-bottom: 1px solid #383838;
-}
 .selected-trick-info {
     font-weight: 500;
     margin-bottom: 15px;
@@ -350,6 +384,7 @@ body {
     min-height: 22px;
     border: 1px solid #444;
     font-style: italic;
+    word-wrap: break-word;
 }
 
 
@@ -438,9 +473,9 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 15px;
+    padding: 10px 12px; /* Un poco menos de padding vertical */
     border-bottom: 1px solid #2D2D2D;
-    font-size: 0.95em;
+    font-size: 0.9em; /* Un poco más pequeño para más densidad */
     background-color: transparent; /* Hereda del ul */
     transition: background-color 0.2s ease;
 }
@@ -450,10 +485,27 @@ body {
 .tricks-list li:hover {
     background-color: #2A2A2A;
 }
+.tricks-list .trick-info {
+    display: flex;
+    flex-direction: column; /* Nombre arriba, detalles abajo */
+    gap: 2px; /* Pequeño espacio entre nombre y detalles */
+    flex-grow: 1;
+}
+.tricks-list .trick-name {
+    font-weight: 500;
+    color: #D0D0D0;
+}
+.tricks-list .trick-details {
+    font-size: 0.85em;
+    color: #909090;
+}
+
 .tricks-list .button-destructive {
     padding: 6px 10px;
     font-size: 0.8em;
     background-color: #D32F2F; /* Rojo más oscuro para botones de eliminar en lista */
+    flex-shrink: 0; /* Para que el botón no se encoja */
+    margin-left: 10px; /* Espacio del texto */
 }
 .tricks-list .button-destructive:hover {
     background-color: #C62828;
@@ -499,7 +551,12 @@ body {
 /* Score Summary Section & Table */
 .score-summary-section {
     margin-top: 30px;
-    animation: fadeInSlideUp 0.5s ease-out forwards;
+    /* animation: fadeInSlideUp 0.5s ease-out forwards; Aplicado por JS */
+}
+.score-summary-section.card { /* Asegurar que hereda estilos de card si es necesario */
+     background-color: #252525;
+    border-radius: 12px;
+    border: 1px solid #333;
 }
 .score-summary-section h2 {
     text-align: center;
@@ -514,6 +571,7 @@ body {
 }
 #scoreTableContainer table {
     width: 100%;
+    min-width: 600px; /* Ancho mínimo para la tabla antes de hacer scroll */
     border-collapse: collapse;
     background-color: #2C2C2C;
     color: #D0D0D0;
@@ -523,12 +581,17 @@ body {
     padding: 10px 12px;
     text-align: left;
     border-bottom: 1px solid #383838;
+    white-space: nowrap; /* Evitar que el contenido de las celdas se rompa mucho */
 }
+#scoreTableContainer td:first-child, /* Celda del nombre del truco puede necesitar más espacio */
+#scoreTableContainer th:first-child {
+    white-space: normal; /* Permitir que el nombre del truco se ajuste */
+}
+
 #scoreTableContainer th {
     background-color: #333333;
     color: #4CAF50; /* Encabezados de tabla en verde */
     font-weight: 600;
-    white-space: nowrap;
 }
 #scoreTableContainer tr:last-child td {
     border-bottom: none;
@@ -556,7 +619,7 @@ body {
     position: fixed;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%) translateY(100px); /* Start off-screen */
+    transform: translateX(-50%) translateY(120px); /* Start further off-screen */
     background-color: #333;
     color: #fff;
     padding: 12px 25px;
@@ -564,12 +627,14 @@ body {
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     z-index: 1000;
     font-size: 0.95em;
-    transition: transform 0.4s ease-out, opacity 0.4s ease-out;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease-out; /* Smoother transition */
     opacity: 0;
+    pointer-events: none; /* No interferir con clicks */
 }
 .toast-notification.show {
     transform: translateX(-50%) translateY(0);
     opacity: 1;
+    pointer-events: auto;
 }
 .toast-notification.success { background-color: #4CAF50; }
 .toast-notification.error { background-color: #F44336; }
@@ -580,7 +645,7 @@ body {
 @keyframes fadeInSlideUp {
     from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(15px); /* Sutil */
     }
     to {
         opacity: 1;
@@ -606,17 +671,23 @@ body {
     .area-title { font-size: 1.4em; }
     .card-content { padding: 15px; }
     
-    .recommended-tricks-grid { grid-template-columns: 1fr; } /* Botones a full width en móvil */
+    /* .recommended-tricks-grid { grid-template-columns: 1fr; } Ya no es necesario si el contenedor es flex 2 */
 
     .total-score-display { font-size: 1.4em; padding: 15px; }
 
     #scoreTableContainer th, #scoreTableContainer td { padding: 8px; font-size: 0.85em;}
     .score-summary-section .button { width: 100%; margin-right: 0; margin-bottom: 10px; }
     .actions-footer .button { width: 100%; }
+
+    .tricks-list li { flex-direction: column; align-items: flex-start; gap: 5px; }
+    .tricks-list .button-destructive { align-self: flex-end; }
 }
 
 @media (max-width: 480px) {
     .main-header h1 { font-size: 1.6em; }
     .total-score-display { font-size: 1.2em; }
-    .tab-trigger { min-width: 90px; /* Para que no se vean tan pequeños */}
+    .tab-trigger { min-width: 80px; font-size: 0.8em;}
+    .recommended-tricks-grid { grid-template-columns: 1fr; } /* Forzar una columna en móviles muy pequeños */
+    .recommended-tricks-area { flex-direction: column; }
+    .recommended-controls-placeholder { min-width: 100%; margin-top: 15px; }
 }

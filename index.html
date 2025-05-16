@@ -48,10 +48,6 @@
                         <label for="cleanlinessRecommended" class="label-modern">Neteja (1-10):</label>
                         <input type="number" id="cleanlinessRecommended" class="input modern-input" min="1" max="10" value="10">
                      </div>
-                     <div class="input-group" id="powermoveRepsRecommendedSection" style="display:none;">
-                        <label for="powermoveRepsRecommended" class="label-modern">Repeticions:</label>
-                        <input type="number" id="powermoveRepsRecommended" class="input modern-input" min="1" value="1">
-                     </div>
                      <button id="addRecommendedTrickButton" class="button button-primary full-width-btn" style="margin-top: 10px;">Afegir Truc Recomanat</button>
                 </div>
             </div>
@@ -67,7 +63,8 @@
                                  <h3>Trucs Recomanats</h3>
                                  <div id="freestyleRecommendedTricks" class="recommended-tricks-grid"></div>
                             </div>
-                            <div id="freestyleRecommendedControlsPlaceholder" class="recommended-controls-placeholder"></div>
+                            <div id="freestyleRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir Truc Personalitzat</h4>
@@ -103,7 +100,8 @@
                                     <select id="staticSuperExtraPoints" class="select modern-select"></select>
                                 </div>
                             </div>
-                            <div id="staticsRecommendedControlsPlaceholder" class="recommended-controls-placeholder"></div>
+                            <div id="staticsRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir Truc Personalitzat</h4>
@@ -125,25 +123,24 @@
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="powermovesSubtotal">0.00</span> punts</p>
                         <div class="recommended-tricks-area">
-                            <div id="powermoveSelectorContainer" class="trick-adder-section"></div>
-                            <div id="powermovesRecommendedControlsPlaceholder" class="recommended-controls-placeholder"></div>
+                            <div id="powermoveSelectorContainer" class="trick-adder-section">
+                                </div>
+                            <div id="powermovesRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                          <div class="flex-center-items bonus-checkbox">
-                            <input type="checkbox" id="pm_more_than_5_reps" class="custom-checkbox"> <label for="pm_more_than_5_reps">Repeticions > 5 (+1p)</label>
+                            <input type="checkbox" id="pm_more_than_5_reps" class="custom-checkbox">
+                            <label for="pm_more_than_5_reps">Combo de més de 5 repeticions (+1p)</label>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir PowerMove Personalitzat</h4>
-                            <p class="small-info">El cost base ha de reflectir la dificultat intrínseca per repetició.</p>
+                            <p class="small-info">El cost base ha de reflectir la dificultat intrínseca.</p>
                             <input type="text" id="customPowermovesTrickName" placeholder="Nom del truc" class="input modern-input">
                             <input type="number" id="customPowermovesTrickCost" placeholder="Cost per rep." class="input modern-input" min="0" step="0.01">
                             <div class="input-group-inline">
                                <label for="customPowermovesTrickCleanliness">Neteja (1-10):</label>
                                <input type="number" id="customPowermovesTrickCleanliness" class="input modern-input" min="1" max="10" value="10">
                             </div>
-                            <div class="input-group-inline">
-                                <label for="customPowermovesTrickReps">Repeticions:</label>
-                                <input type="number" id="customPowermovesTrickReps" class="input modern-input" min="1" value="1">
-                             </div>
                             <button id="addCustomPowermovesTrickButton" class="button button-secondary full-width-btn">Afegir Personalitzat</button>
                         </div>
                     </div>
@@ -160,7 +157,8 @@
                                  <h3>Trucs Recomanats</h3>
                                  <div id="balanceRecommendedTricks" class="recommended-tricks-grid"></div>
                             </div>
-                            <div id="balanceRecommendedControlsPlaceholder" class="recommended-controls-placeholder"></div>
+                            <div id="balanceRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
+                                </div>
                         </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir Truc Personalitzat</h4>
@@ -181,28 +179,14 @@
                         <h2 class="area-title">Combos</h2>
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="combosSubtotal">0.00</span> punts</p>
-                        <div class="combo-options-grid">
-                            <h3>Criteris del Combo (+1p c/u):</h3>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritFreestyle" data-points="1" class="custom-checkbox"> <label for="comboCritFreestyle">Freestyle Involucrat</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritStatics" data-points="1" class="custom-checkbox"> <label for="comboCritStatics">Estàtics Involucrats</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritPowermoves" data-points="1" class="custom-checkbox"> <label for="comboCritPowermoves">PowerMoves Involucrats</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritBalance" data-points="1" class="custom-checkbox"> <label for="comboCritBalance">Balance Involucrat</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritUnbroken" data-points="1" class="custom-checkbox"> <label for="comboCritUnbroken">Unbroken (Sense Fallos)</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritDeadStop" data-points="1" class="custom-checkbox"> <label for="comboCritDeadStop">DeadStop / Parada Controlada</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritCleanExecution" data-points="1" class="custom-checkbox"> <label for="comboCritCleanExecution">Limpieza General del Combo</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritCombinations" data-points="1" class="custom-checkbox"> <label for="comboCritCombinations">Combinacions / Transicions</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboCritFluidity" data-points="1" class="custom-checkbox"> <label for="comboCritFluidity">Fluidesa i Ritme</label></div>
-                        </div>
-                        <div class="combo-modifiers">
-                            <h3>Modificadors de Puntuació:</h3>
-                            <button id="comboAddPerfectionPoint" class="button button-combo-modifier positive-modifier">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707a1 1 0 00-1.414-1.414L10 10.586 8.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>
-                                Perfecció (+1p)
-                            </button>
-                            <button id="comboApplyLowCleanlinessPenalty" class="button button-combo-modifier negative-modifier">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
-                                Neteja Baixa (-0.5p)
-                            </button>
+                        <div class="combo-options">
+                            <h3>Marcar àmbits tocats i condicions:</h3>
+                            <div class="checkbox-group"><input type="checkbox" id="comboFreestyle" data-area="freestyle" class="custom-checkbox"> <label for="comboFreestyle">Freestyle (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboStatics" data-area="statics" class="custom-checkbox"> <label for="comboStatics">Statics (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboPowermoves" data-area="powermoves" class="custom-checkbox"> <label for="comboPowermoves">PowerMoves (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboBalance" data-area="balance" class="custom-checkbox"> <label for="comboBalance">Balance (+2p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboUnbroken" class="custom-checkbox"> <label for="comboUnbroken">Unbroken (+2p)</label></div>
+                            <button id="applyComboPenalty" class="button button-destructive small-btn">Neteja Baixa (-1p)</button>
                         </div>
                     </div>
                 </div>
@@ -235,7 +219,8 @@
         <div id="scoreSummarySection" class="score-summary-section card" style="display:none;">
             <div class="card-content">
                 <h2 id="summaryParticipantName">Resum Participant X</h2>
-                <div id="scoreTableContainer" class="table-responsive"></div>
+                <div id="scoreTableContainer" class="table-responsive">
+                    </div>
                 <button id="downloadCsvButton" class="button button-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" width="20" height="20"><path d="M2.5 13.5V12h15v1.5a2 2 0 01-2 2H4.5a2 2 0 01-2-2zm15-3.5H2.5V8A2.5 2.5 0 015 5.5h10A2.5 2.5 0 0117.5 8v2zM5 5.5A2.5 2.5 0 012.5 8v2h15V8a2.5 2.5 0 00-2.5-2.5H5zM10 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" clip-rule="evenodd" /><path d="M2 0a2 2 0 00-2 2v16a2 2 0 002 2h16a2 2 0 002-2V2a2 2 0 00-2-2H2zm14.5 13.5V12h-13v1.5a.5.5 0 00.5.5h12a.5.5 0 00.5-.5zm0-3.5h-13V8c0-.827.673-1.5 1.5-1.5h10c.827 0 1.5.673 1.5 1.5v2z" fill-rule="evenodd" /></svg>
                     Descarregar CSV
@@ -243,8 +228,8 @@
                  <button id="judgeNextParticipantButton" class="button button-primary">Puntuar Següent / Modificar</button>
             </div>
         </div>
+
     </div>
     <div class="toast-notification" id="toastNotification">Missatge</div>
-    <script src="script.js"></script>
-</body>
+    <script src="script.js"></script></body>
 </html>

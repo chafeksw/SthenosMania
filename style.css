@@ -691,3 +691,89 @@ body {
     .recommended-tricks-area { flex-direction: column; }
     .recommended-controls-placeholder { min-width: 100%; margin-top: 15px; }
 }
+
+/* --- Additions for Powermove Reps and New Combo Section --- */
+
+/* Input for Powermove Repetitions in the recommended trick add controls */
+#powermoveRepsSection {
+    margin-top: 10px; /* Add some space above it */
+}
+#powermoveRepsSection label.label-modern,
+#customPowermovesTrickRepsLabel { /* Assuming you might add a label for custom PM reps */
+    margin-right: 10px;
+}
+#powermoveReps, 
+#customPowermovesTrickReps {
+    width: 80px; /* Specific width for rep inputs */
+}
+
+/* Styling for the new Combo Options layout */
+.combo-options h3 {
+    font-size: 1.1em;
+    color: #C0C0C0;
+    margin-bottom: 15px;
+}
+
+.combo-options .checkbox-group {
+    margin-bottom: 12px; /* Slightly more space between combo items */
+}
+
+.combo-options .custom-checkbox + label {
+    font-size: 0.95em;
+}
+
+.combo-options .button-destructive.small-btn {
+    margin-top: 10px; /* Space above the penalty button */
+}
+
+.combo-divider {
+    border: none;
+    height: 1px;
+    background-color: #383838; /* A subtle line */
+    margin: 15px 0;
+}
+
+/* Ensure input groups with inline labels and inputs are aligned well */
+.input-group { /* General group styling if needed for the new PM reps input */
+    display: flex;
+    flex-direction: column; /* Stack label and input if not inline */
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.input-group.input-group-inline, /* For existing inline groups */
+.input-group-inline { /* For the new custom powermove reps */
+    display: flex;
+    flex-direction: row; /* Keep inline groups as row */
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.input-group.input-group-inline label,
+.input-group-inline label {
+    white-space: nowrap;
+    color: #B0B0B0;
+    margin-bottom: 0; /* Remove bottom margin if it was from .input-group */
+}
+
+.input-group.input-group-inline input[type="number"],
+.input-group-inline input[type="number"] {
+    width: 70px; 
+    flex-grow: 0;
+}
+
+/* For the specific new "Quantitat Reps" in custom powermoves */
+#tabContentPowermoves .custom-trick-adder .input-group-inline label[for="customPowermovesTrickReps"] {
+    /* Styles if needed, e.g., specific alignment or font */
+}
+#customPowermovesTrickReps {
+     width: 80px !important; /* Ensure this specific input for reps has enough width */
+}
+
+
+/* Small adjustment for trick details in the list to make space if names are long */
+.tricks-list .trick-details {
+    font-size: 0.8em; /* Slightly smaller to fit more info */
+    word-break: break-word; /* Allow details to wrap if very long */
+}

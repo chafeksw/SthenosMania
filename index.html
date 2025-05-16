@@ -48,7 +48,11 @@
                         <label for="cleanlinessRecommended" class="label-modern">Neteja (1-10):</label>
                         <input type="number" id="cleanlinessRecommended" class="input modern-input" min="1" max="10" value="10">
                      </div>
-                     <button id="addRecommendedTrickButton" class="button button-primary full-width-btn" style="margin-top: 10px;">Afegir Truc Recomanat</button>
+                     <div id="powermoveRepsSection" class="input-group" style="display:none;">
+                        <label for="powermoveReps" class="label-modern">Quantitat Repeticions:</label>
+                        <input type="number" id="powermoveReps" class="input modern-input" min="1" value="1">
+                     </div>
+                     <button id="addRecommendedTrickButton" class="button button-primary full-width-btn" style="margin-top: 10px;">Afegir Truc</button>
                 </div>
             </div>
 
@@ -128,19 +132,19 @@
                             <div id="powermovesRecommendedControlsPlaceholder" class="recommended-controls-placeholder">
                                 </div>
                         </div>
-                         <div class="flex-center-items bonus-checkbox">
-                            <input type="checkbox" id="pm_more_than_5_reps" class="custom-checkbox">
-                            <label for="pm_more_than_5_reps">Combo de més de 5 repeticions (+1p)</label>
-                        </div>
                         <div class="custom-trick-adder">
                             <h4>Afegir PowerMove Personalitzat</h4>
-                            <p class="small-info">El cost base ha de reflectir la dificultat intrínseca.</p>
+                            <p class="small-info">El cost base ha de reflectir la dificultat intrínseca per UNA repetició.</p>
                             <input type="text" id="customPowermovesTrickName" placeholder="Nom del truc" class="input modern-input">
-                            <input type="number" id="customPowermovesTrickCost" placeholder="Cost per rep." class="input modern-input" min="0" step="0.01">
+                            <input type="number" id="customPowermovesTrickCost" placeholder="Cost per UNA rep." class="input modern-input" min="0" step="0.01">
                             <div class="input-group-inline">
                                <label for="customPowermovesTrickCleanliness">Neteja (1-10):</label>
                                <input type="number" id="customPowermovesTrickCleanliness" class="input modern-input" min="1" max="10" value="10">
                             </div>
+                            <div class="input-group-inline">
+                                <label for="customPowermovesTrickReps">Quantitat Reps:</label>
+                                <input type="number" id="customPowermovesTrickReps" class="input modern-input" min="1" value="1">
+                             </div>
                             <button id="addCustomPowermovesTrickButton" class="button button-secondary full-width-btn">Afegir Personalitzat</button>
                         </div>
                     </div>
@@ -180,13 +184,19 @@
                         <p class="area-description"></p>
                         <p class="area-subtotal">Subtotal: <span id="combosSubtotal">0.00</span> punts</p>
                         <div class="combo-options">
-                            <h3>Marcar àmbits tocats i condicions:</h3>
-                            <div class="checkbox-group"><input type="checkbox" id="comboFreestyle" data-area="freestyle" class="custom-checkbox"> <label for="comboFreestyle">Freestyle (+2p)</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboStatics" data-area="statics" class="custom-checkbox"> <label for="comboStatics">Statics (+2p)</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboPowermoves" data-area="powermoves" class="custom-checkbox"> <label for="comboPowermoves">PowerMoves (+2p)</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboBalance" data-area="balance" class="custom-checkbox"> <label for="comboBalance">Balance (+2p)</label></div>
-                            <div class="checkbox-group"><input type="checkbox" id="comboUnbroken" class="custom-checkbox"> <label for="comboUnbroken">Unbroken (+2p)</label></div>
-                            <button id="applyComboPenalty" class="button button-destructive small-btn">Neteja Baixa (-1p)</button>
+                            <h3>Marcar criteris del combo:</h3>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatFreestyle" data-value="1" class="custom-checkbox"> <label for="comboCatFreestyle">Freestyle (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatEstaticos" data-value="1" class="custom-checkbox"> <label for="comboCatEstaticos">Estàtics (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatPowerMoves" data-value="1" class="custom-checkbox"> <label for="comboCatPowerMoves">PowerMoves (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatBalance" data-value="1" class="custom-checkbox"> <label for="comboCatBalance">Balance (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatUnbroken" data-value="1" class="custom-checkbox"> <label for="comboCatUnbroken">Unbroken (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatDeadStop" data-value="1" class="custom-checkbox"> <label for="comboCatDeadStop">DeadStop (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatLimpieza" data-value="1" class="custom-checkbox"> <label for="comboCatLimpieza">Limpieza (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatCombinaciones" data-value="1" class="custom-checkbox"> <label for="comboCatCombinaciones">Combinacions (+1p)</label></div>
+                            <div class="checkbox-group"><input type="checkbox" id="comboCatFluidez" data-value="1" class="custom-checkbox"> <label for="comboCatFluidez">Fluïdesa (+1p)</label></div>
+                            <hr class="combo-divider">
+                            <div class="checkbox-group"><input type="checkbox" id="comboPuntoExtra" data-value="1" class="custom-checkbox"> <label for="comboPuntoExtra">Punt Extra (+1p)</label></div>
+                            <button id="applyComboPenalty" class="button button-destructive small-btn">Neteja Baixa (-0.5p)</button>
                         </div>
                     </div>
                 </div>

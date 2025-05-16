@@ -1,693 +1,869 @@
-/* Global Reset & Base */
-*, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+document.addEventListener('DOMContentLoaded', () => {
+    // Definiciones de datos (igual que antes)
+    const staticModifiers = [
+        { name: "Tuck", value: 0.15 }, { name: "Tuck Adv", value: 0.3 },
+        { name: "Una Pierna", value: 0.4 }, { name: "Straddle", value: 0.7 },
+        { name: "Half", value: 0.8 }, { name: "Full", value: 1 },
+    ];
+    const extraPointOptions = [
+        { name: "No Extra", value: 0 }, { name: "+0.25p", value: 0.25 },
+        { name: "+0.5p", value: 0.5 },
+    ];
+    const baseStatics = {
+        "Front Lever": 1, "Planche": 1.5, "Touch": 1.5, "Victorian": 1.25,
+        "Flag": 0.75, "Back Lever": 0.75, "Maltese": 2.25, "SAT": 2.25, "Prayer Planche": 2,
+    };
+    const defaultTricksByTab = {
+        freestyle: [
+            { name: "360/Tornado", base: 1 }, { name: "Disloca 360", base: 1.25 },
+            { name: "540", base: 1.5 }, { name: "Geinger", base: 1.5 },
+            { name: "Pasavallas", base: 1.5 }, { name: "PasoFantasma", base: 1.75 },
+            { name: "720 (Super)", base: 3 }, { name: "900 (Super)", base: 3 },
+            { name: "1080 (Super)", base: 3 }, { name: "1240 (Super)", base: 3 },
+            { name: "Regrab (Super)", base: 3 }, { name: "Super540 (Super)", base: 3 },
+            { name: "Immortal (Super)", base: 3 },
+        ],
+        statics: [
+            { name: "Front Lever", base: 1 }, { name: "Planche", base: 1.5 },
+            { name: "Touch", base: 1.5 }, { name: "Victorian", base: 1.25 },
+            { name: "Flag", base: 0.75 }, { name: "Back Lever", base: 0.75 },
+            { name: "Maltese", base: 2.25 }, { name: "SAT", base: 2.25 },
+            { name: "Prayer Planche", base: 2 },
+            { name: "Victorian Cross (Super)", base: 3, isSuper: true },
+            { name: "Reverse Planche (Super)", base: 3, isSuper: true },
+            { name: "SAT Supino (Super)", base: 3, isSuper: true },
+            { name: "Maltese (Avion) (Super)", base: 3, isSuper: true },
+            { name: "One Arm Planche (Super)", base: 3, isSuper: true },
+            { name: "Tiger Planche (Super)", base: 3, isSuper: true },
+        ],
+        powermoves: {
+            empuje: {
+                press: Object.keys(baseStatics).map(name => ({ name: `${name} Press`, staticBase: baseStatics[name], originalStatic: name })),
+                pushup: Object.keys(baseStatics).map(name => ({ name: `${name} Push up`, staticBase: baseStatics[name], originalStatic: name })),
+            },
+            tiron: {
+                raises: Object.keys(baseStatics).map(name => ({ name: `${name} Raise`, staticBase: baseStatics[name], originalStatic: name })),
+                pullups: Object.keys(baseStatics).map(name => ({ name: `${name} Pull up`, staticBase: baseStatics[name], originalStatic: name })),
+                press: Object.keys(baseStatics).map(name => ({ name: `${name} Press (Tirón)`, staticBase: baseStatics[name], originalStatic: name })),
+            }
+        },
+        balance: [
+            { name: "Handstand", base: 0.1 }, { name: "Handstand One Arm", base: 1.25 },
+            { name: "One Arm Flag", base: 2 }, { name: "One Arm Planche", base: 2 },
+            { name: "Dragon Planche", base: 1.75 }, { name: "One Arm Front Lever", base: 1.5 },
+        ],
+        combos: [],
+    };
+    const descriptions = {
+        freestyle: "Creativitat, ús variat de moviments i originalitat. Màxim 10 punts.",
+        statics: "Elements estàtics. Selecciona un modificador i extres. Màxim 10 punts.",
+        powermoves: "Moviments explosius. La puntuació per repetició disminueix. Màxim 10 punts.",
+        balance: "Moviments d'equilibri. Màxim 5 punts.",
+        combos: "Puntua segons àmbits tocats i condicions. Màxim 10 punts.",
+    };
+    const maxScoresPerArea = {
+        freestyle: 10, statics: 10, powermoves: 10, balance: 5, combos: 10,
+    };
 
-body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #121212; /* Fondo principal oscuro */
-    color: #E0E0E0; /* Texto principal claro */
-    line-height: 1.6;
-    font-size: 16px;
-    padding: 15px;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.3s ease; /* Animación para posibles cambios de tema */
-}
+    // Estado de la aplicación
+    let currentParticipant = "A";
+    let difficulty = "amateur";
+    let participantData = {
+        A: { tricks: [], directScores: { combos: 0 }, comboAreas: { freestyle: false, statics: false, powermoves: false, balance: false }, comboUnbroken: false, pm_moreThan5Reps: false, difficulty: "amateur" },
+        B: { tricks: [], directScores: { combos: 0 }, comboAreas: { freestyle: false, statics: false, powermoves: false, balance: false }, comboUnbroken: false, pm_moreThan5Reps: false, difficulty: "amateur" }
+    };
+    let savedScores = { A: null, B: null };
 
-.container {
-    max-width: 850px;
-    margin: 20px auto;
-    background-color: #1E1E1E; /* Fondo de contenedor ligeramente más claro que el body */
-    padding: 20px;
-    border-radius: 16px; /* Bordes más redondeados */
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    border: 1px solid #2D2D2D;
-}
+    let newTrickConfig = { name: "", base: 0, clean: 10, modifierValue: 1, extraPointsValue: 0, powerMoveDetails: {} };
+    let currentTab = "freestyle";
+    let selectedRecommendedTrickName = null;
 
-@media (max-width: 900px) {
-    .container {
-        margin: 10px auto;
-        padding: 15px;
-    }
-}
+    let selectedStaticModifier = staticModifiers.find(m => m.name === "Full").value;
+    let selectedStaticExtra = 0;
 
-/* Header */
-.main-header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #2D2D2D;
-}
-.main-header h1 {
-    font-size: 2.2em;
-    font-weight: 700;
-    color: #4CAF50; /* Verde principal */
-    margin-bottom: 5px;
-}
-.main-header .subtitle {
-    font-size: 1em;
-    color: #A0A0A0; /* Gris claro para subtítulo */
-    font-weight: 300;
-}
+    let pm_category = null;
+    let pm_exercise = null;
+    let pm_staticElement = null;
+    let selectedPowerMoveModifier = staticModifiers.find(m => m.name === "Full").value;
+    let selectedPowerMoveExtra = 0;
 
-/* Participant & Difficulty Section */
-.participant-section {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    margin-bottom: 30px;
-    padding: 20px;
-    background-color: #252525;
-    border-radius: 12px;
-    border: 1px solid #333;
-}
-.participant-selector {
-    display: flex;
-    gap: 10px;
-}
-.participant-btn {
-    flex-grow: 1;
-}
+    // --- Elementos del DOM ---
+    const participantAButton = document.getElementById('participantA');
+    const participantBButton = document.getElementById('participantB');
+    const difficultySelect = document.getElementById('difficulty');
+    const tabTriggers = document.querySelectorAll('.tab-trigger');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const totalScoreDisplay = document.getElementById('totalScore');
+    const tricksListElement = document.getElementById('tricksList');
+    const tricksCountElement = document.getElementById('tricksCount');
+    const noTricksMessage = tricksListElement.querySelector('.no-tricks');
+    const clearAllTricksButton = document.getElementById('clearAllTricksButton');
 
-.difficulty-selector {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.label-modern {
-    font-weight: 500;
-    color: #C0C0C0;
-    font-size: 0.95em;
-}
-
-/* Buttons */
-.button {
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.95em;
-    font-weight: 500;
-    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-    text-align: center;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-}
-.button:active {
-    transform: scale(0.98);
-}
-.button:focus-visible {
-    outline: 2px solid #4CAF50;
-    outline-offset: 2px;
-}
-
-.button.participant-btn {
-    background-color: #333;
-    color: #E0E0E0;
-    border: 1px solid #444;
-}
-.button.participant-btn.active {
-    background-color: #4CAF50; /* Verde para activo */
-    color: #FFFFFF;
-    font-weight: 600;
-    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5);
-}
-.button.participant-btn:not(.active):hover {
-    background-color: #404040;
-}
-
-
-.button-primary {
-    background-color: #4CAF50; /* Verde */
-    color: #FFFFFF;
-}
-.button-primary:hover {
-    background-color: #45a049;
-}
-
-.button-secondary {
-    background-color: #555; /* Gris oscuro */
-    color: #E0E0E0;
-    border: 1px solid #666;
-}
-.button-secondary:hover {
-    background-color: #606060;
-}
-
-.button-destructive {
-    background-color: #F44336; /* Rojo */
-    color: #FFFFFF;
-}
-.button-destructive:hover {
-    background-color: #e53935;
-}
-
-.small-btn {
-    padding: 8px 12px;
-    font-size: 0.85em;
-}
-.large-btn {
-    padding: 15px 25px;
-    font-size: 1.05em;
-    font-weight: 600;
-}
-.full-width-btn {
-    width: 100%;
-}
-
-
-/* Selects & Inputs */
-.modern-select, .modern-input {
-    padding: 12px 15px;
-    border-radius: 8px;
-    background-color: #2C2C2C; /* Fondo de input oscuro */
-    color: #E0E0E0;
-    border: 1px solid #444;
-    font-size: 0.95em;
-    width: 100%;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.modern-select:focus, .modern-input:focus {
-    border-color: #4CAF50; /* Borde verde al enfocar */
-    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
-    outline: none;
-}
-.modern-select {
-    appearance: none;
-    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%208l5%205%205-5z%22%20fill%3D%22%23A0A0A0%22%2F%3E%3C%2Fsvg%3E');
-    background-repeat: no-repeat;
-    background-position: right 15px center;
-    padding-right: 40px; /* Espacio para la flecha */
-}
-.modern-input::placeholder {
-    color: #777;
-}
-.input-group-inline {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 10px 0;
-}
-.input-group-inline label {
-    white-space: nowrap;
-    color: #B0B0B0;
-}
-.input-group-inline input[type="number"] {
-    width: 70px; /* Ancho específico para limpieza */
-    flex-grow: 0;
-}
-
-/* Tabs */
-.tabs-list-container {
-    overflow-x: auto; /* Scroll horizontal en móviles */
-    margin-bottom: 25px;
-    padding-bottom: 5px; /* Espacio para la barra de scroll si aparece */
-}
-.tabs-list {
-    display: flex; /* Flex para que no se rompa en múltiples líneas tan fácil */
-    gap: 8px;
-    min-width: max-content; /* Evita que los botones se encojan demasiado */
-}
-.tab-trigger {
-    padding: 10px 15px;
-    background-color: #2A2A2A;
-    color: #B0B0B0;
-    border: 1px solid transparent; /* Para mantener tamaño al activar */
-    border-bottom: 3px solid transparent;
-    border-radius: 8px 8px 0 0; /* Redondeo solo arriba */
-    font-weight: 500;
-    white-space: nowrap; /* Evita que el texto del botón se parta */
-}
-.tab-trigger.active {
-    background-color: #1E1E1E; /* Mismo color que el fondo de la card */
-    color: #4CAF50; /* Verde para texto activo */
-    border-color: #383838;
-    border-bottom-color: #4CAF50; /* Línea verde abajo */
-    font-weight: 600;
-}
-.tab-trigger:not(.active):hover {
-    background-color: #333;
-    color: #D0D0D0;
-}
-
-/* Cards */
-.card {
-    background-color: #252525; /* Fondo de card */
-    border-radius: 12px;
-    margin-bottom: 25px;
-    border: 1px solid #333;
-    overflow: hidden; /* Para que animaciones internas no se salgan */
-    /* animation: fadeInSlideUp 0.4s ease-out; Ya no se aplica a todas las cards */
-}
-.tab-content.active .card { /* Aplicar animación solo a la card de la tab activa */
-    animation: fadeInSlideUp 0.4s ease-out;
-}
-
-.card-content {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.area-title {
-    font-size: 1.6em;
-    font-weight: 600;
-    color: #4CAF50;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #383838;
-    margin-bottom: 0; /* El gap de flex se encarga */
-}
-.area-description {
-    font-size: 0.9em;
-    color: #A0A0A0;
-    font-style: italic;
-}
-.area-subtotal {
-    font-weight: 600;
-    font-size: 1.2em;
-    color: #E0E0E0;
-    background-color: #303030;
-    padding: 10px 15px;
-    border-radius: 6px;
-    align-self: flex-start;
-    transition: background-color 0.3s ease, color 0.3s ease;
-}
-.area-subtotal span {
-    color: #4CAF50;
-    font-weight: 700;
-}
-
-/* Recommended Tricks Area Layout */
-.recommended-tricks-area {
-    display: flex;
-    flex-direction: row; /* Por defecto, lado a lado */
-    gap: 20px; /* Espacio entre la lista de trucos y los controles de añadir */
-}
-.recommended-tricks-area .trick-adder-section { /* Contenedor de la rejilla de trucos */
-    flex: 2; /* Que la lista de trucos ocupe más espacio */
-    min-width: 0; /* Para que flexbox pueda encogerlo si es necesario */
-}
-.recommended-controls-placeholder { /* Contenedor donde se insertan los controles de añadir */
-    flex: 1; /* Que los controles ocupen menos espacio */
-    min-width: 280px; /* Un ancho mínimo para que los controles no se aplasten demasiado */
-}
-/* En pantallas más pequeñas, apilar verticalmente */
-@media (max-width: 768px) {
-    .recommended-tricks-area {
-        flex-direction: column; /* Apilar verticalmente */
-    }
-    .recommended-controls-placeholder {
-        min-width: 100%; /* Ocupar todo el ancho */
-        margin-top: 20px;
-    }
-}
-
-
-/* Trick Adder Sections & Custom Trick Adder */
-.trick-adder-section h3, .custom-trick-adder h4, .recommended-trick-add-controls h3 {
-    font-weight: 500;
-    color: #C0C0C0;
-    margin-bottom: 15px;
-    font-size: 1.2em;
-}
-.custom-trick-adder {
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid #383838;
-}
-/* Estilos para la sección de controles de añadir truco recomendado */
-.recommended-trick-add-controls {
-    background-color: #2a2a2a; /* Un fondo ligeramente diferente */
-    border: 1px solid #3a3a3a;
-    /* margin-bottom se maneja por .card si se usa como card global, o por el gap de flex si está dentro */
-}
-.recommended-trick-add-controls .card-content {
-    padding: 15px; /* Menos padding si está al lado */
-}
-.recommended-trick-add-controls h3 {
-    font-size: 1.1em; /* Título un poco más pequeño */
-    color: #4CAF50;
-}
-
-
-.recommended-tricks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Ajustar minmax */
-    gap: 10px;
-}
-.recommended-tricks-grid .button {
-    background-color: #333;
-    color: #D0D0D0;
-    border: 1px solid #444;
-    text-align: left;
-    font-weight: 400;
-    justify-content: flex-start;
-    min-height: 50px; /* Asegurar altura mínima */
-    line-height: 1.3;
-}
-.recommended-tricks-grid .button:hover {
-    background-color: #3E3E3E;
-    border-color: #555;
-}
-.recommended-tricks-grid .button.selected {
-    background-color: #4CAF50;
-    color: #fff;
-    border-color: #4CAF50;
-    font-weight: 500;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.4);
-}
-
-.modifiers-section, .super-trick-message {
-    background-color: #2C2C2C;
-    padding: 15px;
-    border-radius: 8px;
-    margin-top: 15px;
-}
-.super-trick-message p {
-    color: #B0B0B0;
-    font-size: 0.85em;
-}
-
-.selected-trick-info {
-    font-weight: 500;
-    margin-bottom: 15px;
-    color: #D0D0D0;
-    background-color: #303030;
-    padding: 12px;
-    border-radius: 6px;
-    min-height: 22px;
-    border: 1px solid #444;
-    font-style: italic;
-    word-wrap: break-word;
-}
-
-
-/* Checkboxes */
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 10px;
-}
-.custom-checkbox { /* Ocultar checkbox original */
-    opacity: 0;
-    position: absolute;
-    width: 0;
-    height: 0;
-}
-.custom-checkbox + label {
-    position: relative;
-    padding-left: 30px; /* Espacio para el checkbox custom */
-    cursor: pointer;
-    user-select: none;
-    color: #C0C0C0;
-    transition: color 0.2s ease;
-}
-.custom-checkbox + label::before { /* Caja del checkbox */
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 20px;
-    height: 20px;
-    border: 2px solid #666;
-    border-radius: 4px;
-    background-color: #2C2C2C;
-    transition: background-color 0.2s ease, border-color 0.2s ease;
-}
-.custom-checkbox + label::after { /* Checkmark (oculto por defecto) */
-    content: '';
-    position: absolute;
-    left: 7px;
-    top: 50%;
-    transform: translateY(-50%) rotate(45deg) scale(0); /* Inicia invisible y escalado a 0 */
-    width: 6px;
-    height: 12px;
-    border: solid #FFFFFF; /* Color del checkmark */
-    border-width: 0 2px 2px 0;
-    transition: transform 0.2s ease-out;
-}
-.custom-checkbox:checked + label::before {
-    background-color: #4CAF50; /* Verde cuando está checkeado */
-    border-color: #4CAF50;
-}
-.custom-checkbox:checked + label::after {
-    transform: translateY(-50%) rotate(45deg) scale(1); /* Visible */
-}
-.custom-checkbox:focus-visible + label::before {
-    outline: 2px solid #4CAF50;
-    outline-offset: 2px;
-}
-.custom-checkbox + label:hover {
-    color: #E0E0E0;
-}
-.custom-checkbox + label:hover::before {
-    border-color: #888;
-}
-
-/* Tricks List */
-.results-card .results-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
-}
-.results-card h2 { color: #C0C0C0; font-size: 1.4em; }
-
-.tricks-list {
-    list-style: none;
-    max-height: 300px; /* Ajustar según necesidad */
-    overflow-y: auto;
-    border: 1px solid #383838;
-    border-radius: 8px;
-    background-color: #1E1E1E; /* Fondo ligeramente distinto para la lista */
-}
-.tricks-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px; /* Un poco menos de padding vertical */
-    border-bottom: 1px solid #2D2D2D;
-    font-size: 0.9em; /* Un poco más pequeño para más densidad */
-    background-color: transparent; /* Hereda del ul */
-    transition: background-color 0.2s ease;
-}
-.tricks-list li:last-child {
-    border-bottom: none;
-}
-.tricks-list li:hover {
-    background-color: #2A2A2A;
-}
-.tricks-list .trick-info {
-    display: flex;
-    flex-direction: column; /* Nombre arriba, detalles abajo */
-    gap: 2px; /* Pequeño espacio entre nombre y detalles */
-    flex-grow: 1;
-}
-.tricks-list .trick-name {
-    font-weight: 500;
-    color: #D0D0D0;
-}
-.tricks-list .trick-details {
-    font-size: 0.85em;
-    color: #909090;
-}
-
-.tricks-list .button-destructive {
-    padding: 6px 10px;
-    font-size: 0.8em;
-    background-color: #D32F2F; /* Rojo más oscuro para botones de eliminar en lista */
-    flex-shrink: 0; /* Para que el botón no se encoja */
-    margin-left: 10px; /* Espacio del texto */
-}
-.tricks-list .button-destructive:hover {
-    background-color: #C62828;
-}
-.trick-area-badge {
-    font-size: 0.75em;
-    padding: 3px 8px;
-    background-color: #383838;
-    color: #A0A0A0;
-    border-radius: 10px;
-    margin-left: 8px;
-    font-weight: 500;
-}
-.no-tricks {
-    color: #888;
-    font-style: italic;
-    padding: 20px;
-    text-align: center;
-}
-
-/* Total Score Display */
-.total-score-display {
-    text-align: center;
-    font-size: 1.6em;
-    font-weight: 700;
-    color: #FFFFFF;
-    background: linear-gradient(to right, #4CAF50, #388E3C); /* Gradiente verde */
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 30px;
-    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
-}
-
-/* Actions Footer (Save button) */
-.actions-footer {
-    margin-top: 30px;
-    text-align: center;
-}
-.actions-footer .button svg { /* Estilo para SVGs en botones */
-    margin-right: 8px;
-}
-
-/* Score Summary Section & Table */
-.score-summary-section {
-    margin-top: 30px;
-    /* animation: fadeInSlideUp 0.5s ease-out forwards; Aplicado por JS */
-}
-.score-summary-section.card { /* Asegurar que hereda estilos de card si es necesario */
-     background-color: #252525;
-    border-radius: 12px;
-    border: 1px solid #333;
-}
-.score-summary-section h2 {
-    text-align: center;
-    color: #4CAF50;
-    margin-bottom: 20px;
-}
-.table-responsive {
-    width: 100%;
-    overflow-x: auto; /* Scroll para tablas anchas en móvil */
-    border: 1px solid #383838;
-    border-radius: 8px;
-}
-#scoreTableContainer table {
-    width: 100%;
-    min-width: 600px; /* Ancho mínimo para la tabla antes de hacer scroll */
-    border-collapse: collapse;
-    background-color: #2C2C2C;
-    color: #D0D0D0;
-    font-size: 0.9em;
-}
-#scoreTableContainer th, #scoreTableContainer td {
-    padding: 10px 12px;
-    text-align: left;
-    border-bottom: 1px solid #383838;
-    white-space: nowrap; /* Evitar que el contenido de las celdas se rompa mucho */
-}
-#scoreTableContainer td:first-child, /* Celda del nombre del truco puede necesitar más espacio */
-#scoreTableContainer th:first-child {
-    white-space: normal; /* Permitir que el nombre del truco se ajuste */
-}
-
-#scoreTableContainer th {
-    background-color: #333333;
-    color: #4CAF50; /* Encabezados de tabla en verde */
-    font-weight: 600;
-}
-#scoreTableContainer tr:last-child td {
-    border-bottom: none;
-}
-#scoreTableContainer tr:hover {
-    background-color: #353535;
-}
-#scoreTableContainer tfoot td {
-    font-weight: bold;
-    color: #E0E0E0;
-    background-color: #333333;
-}
-#scoreTableContainer tfoot .grand-total td {
-    color: #4CAF50;
-    font-size: 1.1em;
-}
-.score-summary-section .button {
-    margin-top: 20px;
-    margin-right: 10px;
-}
-
-
-/* Toast Notification */
-.toast-notification {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(120px); /* Start further off-screen */
-    background-color: #333;
-    color: #fff;
-    padding: 12px 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    z-index: 1000;
-    font-size: 0.95em;
-    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.4s ease-out; /* Smoother transition */
-    opacity: 0;
-    pointer-events: none; /* No interferir con clicks */
-}
-.toast-notification.show {
-    transform: translateX(-50%) translateY(0);
-    opacity: 1;
-    pointer-events: auto;
-}
-.toast-notification.success { background-color: #4CAF50; }
-.toast-notification.error { background-color: #F44336; }
-.toast-notification.info { background-color: #2196F3; } /* Azul para info */
-
-
-/* Animations */
-@keyframes fadeInSlideUp {
-    from {
-        opacity: 0;
-        transform: translateY(15px); /* Sutil */
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    body { font-size: 15px; padding: 10px; }
-    .container { padding: 15px; }
-    .main-header h1 { font-size: 1.8em; }
-    .main-header .subtitle { font-size: 0.9em; }
+    // Controles para añadir trucos recomendados (sección movible)
+    const recommendedTrickAddControlsSection = document.getElementById('recommendedTrickAddControlsSection');
+    const addRecommendedTrickTitleElement = document.getElementById('addRecommendedTrickTitle');
+    const selectedRecommendedTrickDisplayElement = document.getElementById('selectedRecommendedTrickDisplay');
+    const cleanlinessRecommendedInput = document.getElementById('cleanlinessRecommended');
+    const addRecommendedTrickButton = document.getElementById('addRecommendedTrickButton');
     
-    .participant-section { flex-direction: column; padding: 15px; }
-    .difficulty-selector { flex-direction: column; align-items: flex-start; }
+    const staticModifierSelect = document.getElementById('staticModifier');
+    const staticExtraPointsSelect = document.getElementById('staticExtraPoints');
+    const staticsModifiersSection = document.getElementById('staticsModifiersSection');
+    const staticsSuperMessage = document.getElementById('staticsSuperMessage');
+    const staticSuperExtraPointsSelect = document.getElementById('staticSuperExtraPoints');
     
-    .button { padding: 10px 15px; font-size: 0.9em; }
-    .large-btn { padding: 12px 20px; font-size: 1em; }
+    const saveParticipantScoreButton = document.getElementById('saveParticipantScoreButton');
+    const currentParticipantIdDisplay = document.getElementById('currentParticipantIdDisplay');
+    const scoreSummarySection = document.getElementById('scoreSummarySection');
+    const summaryParticipantNameElement = document.getElementById('summaryParticipantName');
+    const scoreTableContainer = document.getElementById('scoreTableContainer');
+    const downloadCsvButton = document.getElementById('downloadCsvButton');
+    const judgeNextParticipantButton = document.getElementById('judgeNextParticipantButton');
+    const toastNotification = document.getElementById('toastNotification');
 
-    .tabs-list .tab-trigger { padding: 8px 10px; font-size: 0.85em;}
+    // --- INICIALIZACIÓN ---
+    function initialize() {
+        participantAButton.addEventListener('click', () => switchParticipant('A'));
+        participantBButton.addEventListener('click', () => switchParticipant('B'));
+        
+        difficultySelect.addEventListener('change', (e) => {
+            difficulty = e.target.value;
+            participantData[currentParticipant].difficulty = difficulty;
+            updateAllScoresAndUI(); // Recalcular scores si cambia la dificultad
+            showToast("Dificultad actualizada", "info");
+        });
+
+        tabTriggers.forEach(trigger => {
+            trigger.addEventListener('click', () => {
+                const tabName = trigger.getAttribute('data-tab');
+                setCurrentTab(tabName);
+            });
+        });
+        
+        Object.keys(descriptions).forEach(key => {
+            const contentElement = document.getElementById(`tabContent${capitalize(key)}`);
+            if (contentElement) {
+                const descElement = contentElement.querySelector('.area-description');
+                if (descElement) descElement.textContent = descriptions[key];
+            }
+        });
+
+        populateSelect(staticModifierSelect, staticModifiers, m => `${m.name} (x${m.value})`, m => m.value);
+        staticModifierSelect.value = selectedStaticModifier;
+        staticModifierSelect.addEventListener('change', e => selectedStaticModifier = Number(e.target.value));
+        
+        populateSelect(staticExtraPointsSelect, extraPointOptions, o => o.name, o => o.value);
+        staticExtraPointsSelect.value = selectedStaticExtra;
+        staticExtraPointsSelect.addEventListener('change', e => selectedStaticExtra = Number(e.target.value));
+
+        populateSelect(staticSuperExtraPointsSelect, extraPointOptions, o => o.name, o => o.value);
+        staticSuperExtraPointsSelect.value = selectedStaticExtra;
+        staticSuperExtraPointsSelect.addEventListener('change', e => selectedStaticExtra = Number(e.target.value));
+
+        ['freestyle', 'statics', 'balance'].forEach(area => populateRecommendedTricks(area));
+        buildPowerMoveSelectors();
+        
+        document.getElementById('pm_more_than_5_reps').addEventListener('change', e => {
+            participantData[currentParticipant].pm_moreThan5Reps = e.target.checked;
+            updateAllScoresAndUI();
+        });
+
+        ['Freestyle', 'Statics', 'Powermoves', 'Balance'].forEach(area => {
+            document.getElementById(`combo${area}`).addEventListener('change', e => {
+                participantData[currentParticipant].comboAreas[area.toLowerCase()] = e.target.checked;
+                updateComboScoreAndTotal();
+            });
+        });
+        document.getElementById('comboUnbroken').addEventListener('change', e => {
+            participantData[currentParticipant].comboUnbroken = e.target.checked;
+            updateComboScoreAndTotal();
+        });
+        document.getElementById('applyComboPenalty').addEventListener('click', () => {
+            participantData[currentParticipant].directScores.combos = Math.max(0, (participantData[currentParticipant].directScores.combos || 0) - 1);
+            updateAreaSubtotal('combos');
+            updateTotalScore();
+            showToast("Penalización de combo aplicada", "info");
+        });
+        
+        addRecommendedTrickButton.addEventListener('click', handleAddRecommendedTrickToList);
+        
+        ['Freestyle', 'Statics', 'Powermoves', 'Balance'].forEach(area => {
+            document.getElementById(`addCustom${capitalize(area)}TrickButton`).addEventListener('click', () => handleAddCustomTrick(area.toLowerCase()));
+        });
+
+        clearAllTricksButton.addEventListener('click', () => {
+            if (confirm(`¿Segur que vols eliminar tots els trucs del participant ${currentParticipant}? Aquesta acció no es pot desfer.`)) {
+                participantData[currentParticipant].tricks = [];
+                updateAllScoresAndUI();
+                showToast("Tots els trucs eliminats", "info");
+            }
+        });
+
+        saveParticipantScoreButton.addEventListener('click', handleSaveParticipantScore);
+        downloadCsvButton.addEventListener('click', handleDownloadCsv);
+        judgeNextParticipantButton.addEventListener('click', () => {
+            scoreSummarySection.style.display = 'none';
+            scoreSummarySection.classList.remove('visible'); // Para animación
+        });
+        
+        loadParticipantState(currentParticipant);
+        updateCurrentParticipantIdDisplay();
+    }
+
+    // --- MANEJO DE PARTICIPANTE Y ESTADO ---
+    function switchParticipant(participantId) {
+        if (currentParticipant === participantId && !scoreSummarySection.style.display === 'none') return;
+        
+        if (scoreSummarySection.style.display !== 'none' && savedScores[currentParticipant]) {
+            // Ok to switch if already saved and summary is shown
+        } else if (participantData[currentParticipant].tricks.length > 0 || participantData[currentParticipant].directScores.combos > 0) {
+            // Check for any meaningful score data
+            if (!confirm(`Tens dades per al Participant ${currentParticipant}. Si canvies sense guardar, es perdran les puntuacions no finalitzades d'aquest participant. Vols continuar?`)) {
+                return;
+            }
+        }
+
+        // Ocultar y resetear el estado del panel de añadir truco recomendado antes de cambiar de pestaña o participante
+        hideAndResetRecommendedControls();
+
+        currentParticipant = participantId;
+        scoreSummarySection.style.display = 'none'; // Ocultar resumen al cambiar
+        scoreSummarySection.classList.remove('visible');
+
+        loadParticipantState(currentParticipant);
+        updateParticipantButtonsUI();
+        updateCurrentParticipantIdDisplay();
+        showToast(`Canviat al Participant ${currentParticipant}`, "info");
+    }
     
-    .area-title { font-size: 1.4em; }
-    .card-content { padding: 15px; }
+    function loadParticipantState(participantId) {
+        difficulty = participantData[participantId].difficulty;
+        difficultySelect.value = difficulty;
+
+        document.getElementById('pm_more_than_5_reps').checked = participantData[participantId].pm_moreThan5Reps;
+        Object.keys(participantData[participantId].comboAreas).forEach(areaKey => {
+            document.getElementById(`combo${capitalize(areaKey)}`).checked = participantData[participantId].comboAreas[areaKey];
+        });
+        document.getElementById('comboUnbroken').checked = participantData[participantId].comboUnbroken;
+
+        ['Freestyle', 'Statics', 'Powermoves', 'Balance'].forEach(area => {
+            document.getElementById(`custom${capitalize(area)}TrickName`).value = '';
+            document.getElementById(`custom${capitalize(area)}TrickCost`).value = '';
+            document.getElementById(`custom${capitalize(area)}TrickCleanliness`).value = 10;
+        });
+
+        // No llamar a resetNewRecommendedTrickState() aquí directamente, 
+        // se llama en setCurrentTab y al seleccionar un truco.
+        // Pero sí asegurar que el panel de añadir recomendado está oculto inicialmente.
+        hideAndResetRecommendedControls();
+        
+        setCurrentTab(currentTab); // Refresca la UI de la pestaña actual
+        updateAllScoresAndUI(); 
+    }
+
+    function updateParticipantButtonsUI() {
+        participantAButton.classList.toggle('active', currentParticipant === 'A');
+        participantBButton.classList.toggle('active', currentParticipant === 'B');
+    }
+    function updateCurrentParticipantIdDisplay() {
+        currentParticipantIdDisplay.textContent = currentParticipant;
+    }
+
+    function setCurrentTab(tabName) {
+        // Antes de cambiar de pestaña, ocultar los controles de añadir truco recomendado
+        hideAndResetRecommendedControls();
+
+        currentTab = tabName;
+        tabTriggers.forEach(t => t.classList.toggle('active', t.getAttribute('data-tab') === tabName));
+        tabContents.forEach(c => {
+            const isActive = c.id === `tabContent${capitalize(tabName)}`;
+            if (isActive && c.style.display !== 'block') {
+                c.style.display = 'block';
+                // Trigger reflow for animation
+                void c.offsetWidth; 
+                c.classList.add('active-tab-content-animation');
+            } else if (!isActive) {
+                c.style.display = 'none';
+                c.classList.remove('active-tab-content-animation');
+            }
+        });
+        
+        // No llamar a resetNewRecommendedTrickState() aquí directamente,
+        // sino asegurar que los controles están listos/ocultos por hideAndResetRecommendedControls.
+        // updateUIForCurrentTab se encargará de mostrar los controles si algo se selecciona en la nueva pestaña.
+        updateUIForCurrentTab();
+    }
     
-    /* .recommended-tricks-grid { grid-template-columns: 1fr; } Ya no es necesario si el contenedor es flex 2 */
+    function hideAndResetRecommendedControls() {
+        if (recommendedTrickAddControlsSection.parentNode) {
+            // Lo devolvemos a su sitio original (fuera del DOM visible) o a un contenedor oculto si es necesario
+            // Por ahora, simplemente lo ocultamos y reseteamos estado.
+            document.body.appendChild(recommendedTrickAddControlsSection); // Moverlo fuera de placeholders
+        }
+        recommendedTrickAddControlsSection.style.display = 'none';
+        selectedRecommendedTrickName = null;
+        newTrickConfig = { name: "", base: 0, clean: 10, modifierValue: 1, extraPointsValue: 0, powerMoveDetails: {} };
+        cleanlinessRecommendedInput.value = 10;
+        selectedRecommendedTrickDisplayElement.textContent = "Selecciona un truc de la llista.";
 
-    .total-score-display { font-size: 1.4em; padding: 15px; }
+        // Desmarcar botones de trucos recomendados en todas las pestañas
+        document.querySelectorAll('.recommended-tricks-grid .button.selected').forEach(btn => btn.classList.remove('selected'));
+    }
 
-    #scoreTableContainer th, #scoreTableContainer td { padding: 8px; font-size: 0.85em;}
-    .score-summary-section .button { width: 100%; margin-right: 0; margin-bottom: 10px; }
-    .actions-footer .button { width: 100%; }
 
-    .tricks-list li { flex-direction: column; align-items: flex-start; gap: 5px; }
-    .tricks-list .button-destructive { align-self: flex-end; }
-}
+    function updateUIForCurrentTab() {
+        // La visibilidad de recommendedTrickAddControlsSection se maneja al seleccionar un truco.
+        // Aquí principalmente manejamos los modificadores específicos de pestañas.
+        const isStaticTrickSelected = currentTab === 'statics' && selectedRecommendedTrickName;
+        if (isStaticTrickSelected) {
+            const isSuper = defaultTricksByTab.statics.find(t => t.name === selectedRecommendedTrickName)?.isSuper;
+            staticsModifiersSection.style.display = !isSuper ? 'block' : 'none';
+            staticsSuperMessage.style.display = isSuper ? 'block' : 'none';
+        } else {
+            staticsModifiersSection.style.display = 'none';
+            staticsSuperMessage.style.display = 'none';
+        }
 
-@media (max-width: 480px) {
-    .main-header h1 { font-size: 1.6em; }
-    .total-score-display { font-size: 1.2em; }
-    .tab-trigger { min-width: 80px; font-size: 0.8em;}
-    .recommended-tricks-grid { grid-template-columns: 1fr; } /* Forzar una columna en móviles muy pequeños */
-    .recommended-tricks-area { flex-direction: column; }
-    .recommended-controls-placeholder { min-width: 100%; margin-top: 15px; }
-}
+        const isPowerMoveConfigured = currentTab === 'powermoves' && pm_staticElement;
+         if(isPowerMoveConfigured) {
+            // Mostrar y actualizar el panel de añadir recomendado para el PM configurado
+            const placeholder = document.getElementById(`${currentTab}RecommendedControlsPlaceholder`);
+            if (placeholder) {
+                placeholder.appendChild(recommendedTrickAddControlsSection);
+                recommendedTrickAddControlsSection.style.display = 'block';
+                addRecommendedTrickTitleElement.textContent = `Afegir PowerMove Configurat`;
+                selectedRecommendedTrickDisplayElement.textContent = `PM: ${capitalize(pm_category)} ${pm_exercise} ${pm_staticElement.originalStatic}`;
+            }
+        }
+        // Si no hay un PM configurado Y no hay un truco recomendado seleccionado, el panel global debe estar oculto.
+        // Esto se maneja en hideAndResetRecommendedControls y al seleccionar un truco recomendado.
+    }
+
+    function populateSelect(selectElement, options, textFn, valueFn) {
+        if (!selectElement) return;
+        selectElement.innerHTML = '';
+        options.forEach(option => {
+            const opt = document.createElement('option');
+            opt.value = valueFn(option);
+            opt.textContent = textFn(option);
+            selectElement.appendChild(opt);
+        });
+    }
+
+    function populateRecommendedTricks(tabKey) {
+        const container = document.getElementById(`${tabKey}RecommendedTricks`);
+        if (!container || !defaultTricksByTab[tabKey]) return;
+
+        const sortedTricks = [...defaultTricksByTab[tabKey]].sort((a, b) => b.base - a.base);
+        
+        container.innerHTML = '';
+        sortedTricks.forEach(trick => {
+            const button = document.createElement('button');
+            button.classList.add('button');
+            button.textContent = `${trick.name} (Base: ${trick.base}) ${trick.isSuper ? "[S]" : ""}`;
+            button.addEventListener('click', () => {
+                // Primero, deseleccionar cualquier otro truco en cualquier otra pestaña y ocultar controles
+                hideAndResetRecommendedControls();
+
+                selectedRecommendedTrickName = trick.name; 
+                pm_staticElement = null; 
+                
+                newTrickConfig.name = trick.name;
+                newTrickConfig.base = trick.base;
+                
+                // Desmarcar botón previo en esta misma grid
+                container.querySelectorAll('.button.selected').forEach(btn => btn.classList.remove('selected'));
+                button.classList.add('selected'); // Marcar el nuevo
+
+                // Mover y mostrar la sección de controles al placeholder de la pestaña actual
+                const placeholder = document.getElementById(`${tabKey}RecommendedControlsPlaceholder`);
+                if (placeholder) {
+                    placeholder.appendChild(recommendedTrickAddControlsSection);
+                    recommendedTrickAddControlsSection.style.display = 'block';
+                    addRecommendedTrickTitleElement.textContent = `Afegir Truc Recomanat (${capitalize(tabKey)})`;
+                    selectedRecommendedTrickDisplayElement.textContent = `Seleccionat: ${trick.name} (Base: ${trick.base})`;
+                }
+
+
+                if (tabKey === 'statics') {
+                    const isSuper = trick.isSuper === true;
+                    if (isSuper && staticsSuperMessage.querySelector('p')) {
+                         staticsSuperMessage.querySelector('p').textContent = `Supertruc: ${trick.base}p base. No s'apliquen mod. de posició.`;
+                    }
+                    selectedStaticModifier = staticModifiers.find(m => m.name === "Full").value;
+                    staticModifierSelect.value = selectedStaticModifier;
+                    selectedStaticExtra = 0;
+                    staticExtraPointsSelect.value = selectedStaticExtra;
+                    staticSuperExtraPointsSelect.value = selectedStaticExtra;
+                }
+                updateUIForCurrentTab(); // Actualiza visibilidad de modificadores de estáticos, etc.
+            });
+            container.appendChild(button);
+        });
+    }
+
+    // --- LÓGICA DE CÁLCULO Y ADICIÓN DE TRUCOS ---
+    function getDifficultyMultiplierVal() {
+        const multipliers = { beginner: 1.5, amateur: 1, professional: 0.75 };
+        return multipliers[difficulty] || 1;
+    }
+    
+    function addTrickToParticipant(trickData) {
+        participantData[currentParticipant].tricks.push(trickData);
+        updateAllScoresAndUI();
+        showToast(`"${trickData.displayName}" afegit!`, "success");
+    }
+
+    function handleAddRecommendedTrickToList() {
+        if (currentTab === 'combos') return;
+        if (!selectedRecommendedTrickName && !(currentTab === 'powermoves' && pm_staticElement)) {
+             showToast("Selecciona un truc recomanat o configura un PowerMove complet.", "error");
+             return;
+        }
+
+        const cleanVal = parseInt(cleanlinessRecommendedInput.value) || 10; // Usar el input renombrado
+        const difficultyMult = getDifficultyMultiplierVal();
+        let trickDetails = {
+            area: currentTab,
+            cleanScore: cleanVal,
+            difficultyMultiplierApplied: difficultyMult,
+            repetitionFactor: 1,
+            staticModifierName: 'N/A', staticModifierValue: 1,
+            extraPointsValue: 0,
+        };
+
+        if (currentTab === "statics") {
+            const baseTrickDef = defaultTricksByTab.statics.find(t => t.name === selectedRecommendedTrickName);
+            trickDetails.nameForRepetition = selectedRecommendedTrickName;
+            trickDetails.basePoints = baseTrickDef.base;
+            trickDetails.isSuperStatic = baseTrickDef.isSuper === true;
+            
+            if (!trickDetails.isSuperStatic) {
+                trickDetails.staticModifierValue = selectedStaticModifier;
+                trickDetails.staticModifierName = staticModifiers.find(m => m.value === selectedStaticModifier)?.name || 'Full';
+            }
+            trickDetails.extraPointsValue = selectedStaticExtra;
+            trickDetails.displayName = selectedRecommendedTrickName + 
+                (trickDetails.isSuperStatic ? " (Super)" : ` (${trickDetails.staticModifierName})`) +
+                (selectedStaticExtra > 0 ? ` +${selectedStaticExtra}p` : "");
+
+        } else if (currentTab === "powermoves") {
+            if (!pm_category || !pm_exercise || !pm_staticElement) { showToast("Configura el PowerMove.", "error"); return; }
+            const staticInfoForPM = baseStatics[pm_staticElement.originalStatic];
+            trickDetails.isPowerMove = true;
+            trickDetails.nameForRepetition = `PM-${pm_category}-${pm_exercise}-${pm_staticElement.originalStatic}`;
+            trickDetails.basePoints = staticInfoForPM / 3;
+            
+            trickDetails.staticModifierValue = selectedPowerMoveModifier;
+            trickDetails.staticModifierName = staticModifiers.find(m => m.value === selectedPowerMoveModifier)?.name || 'Full';
+            trickDetails.extraPointsValue = selectedPowerMoveExtra;
+            trickDetails.powerMoveDetails = { category: pm_category, exercise: pm_exercise, staticElementOriginalName: pm_staticElement.originalStatic };
+
+            trickDetails.displayName = `${capitalize(pm_category)} ${pm_exercise} ${pm_staticElement.originalStatic} (${trickDetails.staticModifierName})` +
+                (selectedPowerMoveExtra > 0 ? ` +${selectedPowerMoveExtra}p` : "");
+        
+        } else if (currentTab === "freestyle" || currentTab === "balance") {
+            const baseTrickDef = defaultTricksByTab[currentTab].find(t => t.name === selectedRecommendedTrickName);
+            trickDetails.nameForRepetition = selectedRecommendedTrickName;
+            trickDetails.basePoints = baseTrickDef.base;
+            trickDetails.displayName = selectedRecommendedTrickName;
+        }
+        
+        addTrickToParticipant(trickDetails);
+        
+        // Después de añadir, ocultar y resetear los controles de añadir truco recomendado
+        hideAndResetRecommendedControls();
+        if (currentTab === "powermoves") { pm_staticElement = null; buildPowerMoveSelectors(); }
+    }
+
+    function handleAddCustomTrick(area) {
+        const nameInput = document.getElementById(`custom${capitalize(area)}TrickName`);
+        const costInput = document.getElementById(`custom${capitalize(area)}TrickCost`);
+        const cleanlinessInput = document.getElementById(`custom${capitalize(area)}TrickCleanliness`);
+
+        const trickName = nameInput.value.trim();
+        const trickCost = parseFloat(costInput.value);
+        const cleanVal = parseInt(cleanlinessInput.value) || 10;
+
+        if (!trickName || isNaN(trickCost) || trickCost <= 0) {
+            showToast("Nom i cost base (positiu) són requerits per a trucs personalitzats.", "error");
+            return;
+        }
+        const difficultyMult = getDifficultyMultiplierVal();
+        let trickDetails = {
+            area: area,
+            nameForRepetition: `Custom-${area}-${trickName}`,
+            displayName: `${trickName} (Custom)`,
+            basePoints: trickCost,
+            cleanScore: cleanVal,
+            difficultyMultiplierApplied: difficultyMult,
+            repetitionFactor: 1,
+            staticModifierName: 'N/A', staticModifierValue: 1,
+            extraPointsValue: 0,
+            isCustom: true,
+        };
+
+        if (area === "powermoves") trickDetails.isPowerMove = true;
+        
+        addTrickToParticipant(trickDetails);
+        nameInput.value = ''; costInput.value = ''; cleanlinessInput.value = 10;
+    }
+
+    function removeTrick(index) {
+        participantData[currentParticipant].tricks.splice(index, 1);
+        updateAllScoresAndUI();
+        showToast("Truc eliminat.", "info");
+    }
+    
+    function updateAllScoresAndUI() {
+        const currentTricks = participantData[currentParticipant].tricks;
+        const recalculatedTricks = [];
+        const runningTrickCounts = {}; 
+
+        for (const trick of currentTricks) {
+            const trickRepetitionId = trick.nameForRepetition;
+            runningTrickCounts[trickRepetitionId] = (runningTrickCounts[trickRepetitionId] || 0) + 1;
+            const countForThisInstance = runningTrickCounts[trickRepetitionId];
+
+            let currentRepetitionFactor = 1;
+            // Aplicar penalización a Freestyle, Statics, Powermoves, Balance
+            if (trick.area === "powermoves" || trick.area === "freestyle" || trick.area === "balance" || trick.area === "statics") {
+                if (countForThisInstance === 2) currentRepetitionFactor = 0.66;
+                else if (countForThisInstance === 3) currentRepetitionFactor = 0.33;
+                else if (countForThisInstance > 3) currentRepetitionFactor = 0;
+            }
+
+            let score = trick.basePoints;
+            if (trick.isPowerMove || (trick.area === "statics" && !trick.isSuperStatic && !trick.isCustom)) { // Custom statics no usan modif. de lista
+                score *= trick.staticModifierValue;
+            }
+            
+            score *= trick.difficultyMultiplierApplied;
+            score *= (trick.cleanScore / 10);
+            score += trick.extraPointsValue;
+            score *= currentRepetitionFactor;
+            
+            recalculatedTricks.push({ ...trick, finalScore: Math.max(0, score), repetitionFactor: currentRepetitionFactor });
+        }
+        participantData[currentParticipant].tricks = recalculatedTricks;
+        
+        Object.keys(descriptions).forEach(key => updateAreaSubtotal(key));
+        updateAreaSubtotal('combos');
+        renderTricksList();
+        updateTotalScore();
+    }
+
+    function getAreaScore(area) {
+        if (area === "combos") {
+            return participantData[currentParticipant].directScores.combos || 0;
+        }
+        return participantData[currentParticipant].tricks
+            .filter(t => t.area === area)
+            .reduce((sum, trick) => sum + (trick.finalScore || 0), 0);
+    }
+
+    function updateAreaSubtotal(areaKey) {
+         const subtotalElement = document.getElementById(`${areaKey}Subtotal`);
+         if (subtotalElement) {
+            let score = getAreaScore(areaKey);
+            
+            if (areaKey === "powermoves" && participantData[currentParticipant].pm_moreThan5Reps) {
+                score += 1;
+            }
+
+            if (maxScoresPerArea[areaKey] !== undefined && score > maxScoresPerArea[areaKey]) {
+                score = maxScoresPerArea[areaKey];
+            }
+            if (areaKey === "combos") {
+                participantData[currentParticipant].directScores.combos = score;
+            }
+            subtotalElement.textContent = score.toFixed(2);
+         }
+    }
+    
+    function updateComboScoreAndTotal() {
+        let comboScoreFromCheckboxes = 0;
+        const { comboAreas, comboUnbroken } = participantData[currentParticipant];
+        if (comboAreas.freestyle) comboScoreFromCheckboxes += 2;
+        if (comboAreas.statics) comboScoreFromCheckboxes += 2;
+        if (comboAreas.powermoves) comboScoreFromCheckboxes += 2;
+        if (comboAreas.balance) comboScoreFromCheckboxes += 2;
+        if (comboUnbroken) comboScoreFromCheckboxes += 2;
+        
+        participantData[currentParticipant].directScores.combos = Math.min(comboScoreFromCheckboxes, maxScoresPerArea.combos);
+        
+        updateAreaSubtotal('combos');
+        updateTotalScore();
+    }
+
+    function updateTotalScore() {
+        let total = 0;
+        ['freestyle', 'statics', 'powermoves', 'balance', 'combos'].forEach(areaKey => {
+            const subtotalElement = document.getElementById(`${areaKey}Subtotal`);
+            if(subtotalElement) total += parseFloat(subtotalElement.textContent) || 0;
+        });
+        totalScoreDisplay.textContent = total.toFixed(2);
+    }
+
+    function renderTricksList() {
+        tricksListElement.innerHTML = ''; 
+        const currentTricks = participantData[currentParticipant].tricks;
+        tricksCountElement.textContent = currentTricks.length;
+
+        if (currentTricks.length === 0) {
+            if (noTricksMessage) {
+                noTricksMessage.style.display = 'block';
+                tricksListElement.appendChild(noTricksMessage);
+            }
+            return;
+        }
+        if (noTricksMessage) noTricksMessage.style.display = 'none';
+
+        currentTricks.forEach((trick, index) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="trick-info">
+                    <span class="trick-name">${trick.displayName} <span class="trick-area-badge">${trick.area}</span></span>
+                    <span class="trick-details">Base: ${trick.basePoints.toFixed(2)}, Neteja: ${trick.cleanScore}/10, Rep. x${trick.repetitionFactor.toFixed(2)}, Score: ${trick.finalScore.toFixed(2)}</span>
+                </div>
+                <button class="button button-destructive small-btn" data-index="${index}" title="Eliminar truc">✕</button>
+            `;
+            li.querySelector('.button-destructive').addEventListener('click', () => removeTrick(index));
+            tricksListElement.appendChild(li);
+        });
+    }
+    
+    function buildPowerMoveSelectors() {
+        const container = document.getElementById('powermoveSelectorContainer');
+        if (!container) return;
+        container.innerHTML = ''; 
+
+        const title = document.createElement('h3');
+        title.textContent = 'Configurar PowerMove (Recomanat):';
+        container.appendChild(title);
+
+        const categorySelect = createSelectForPM(Object.keys(defaultTricksByTab.powermoves), "1. Tipus", pm_category, (val) => {
+            pm_category = val; pm_exercise = null; pm_staticElement = null; selectedRecommendedTrickName = null;
+            hideAndResetRecommendedControls(); // Ocultar panel de añadir si se cambia config de PM
+            buildPowerMoveSelectors(); updateUIForCurrentTab();
+        });
+        container.appendChild(categorySelect);
+
+        if (pm_category && defaultTricksByTab.powermoves[pm_category]) {
+            const exercises = Object.keys(defaultTricksByTab.powermoves[pm_category]);
+            const exerciseSelect = createSelectForPM(exercises, "2. Exercici", pm_exercise, (val) => {
+                pm_exercise = val; pm_staticElement = null; selectedRecommendedTrickName = null;
+                hideAndResetRecommendedControls();
+                buildPowerMoveSelectors(); updateUIForCurrentTab();
+            });
+            container.appendChild(exerciseSelect);
+        }
+
+        if (pm_category && pm_exercise && defaultTricksByTab.powermoves[pm_category][pm_exercise]) {
+            const staticElementsForPM = defaultTricksByTab.powermoves[pm_category][pm_exercise];
+            const staticElementSelect = document.createElement('select');
+            staticElementSelect.classList.add('select', 'modern-select');
+            
+            const placeholderOpt = document.createElement('option');
+            placeholderOpt.value = ""; placeholderOpt.textContent = "3. Element Base";
+            placeholderOpt.disabled = !pm_staticElement; placeholderOpt.selected = !pm_staticElement;
+            staticElementSelect.appendChild(placeholderOpt);
+
+            staticElementsForPM.forEach(el => {
+                const opt = document.createElement('option');
+                opt.value = el.originalStatic; 
+                opt.textContent = `${el.originalStatic} (Base: ${(el.staticBase/3).toFixed(2)}/rep)`;
+                if (pm_staticElement && pm_staticElement.originalStatic === el.originalStatic) opt.selected = true;
+                staticElementSelect.appendChild(opt);
+            });
+            
+            staticElementSelect.addEventListener('change', (e) => {
+                const selectedName = e.target.value;
+                selectedRecommendedTrickName = null; // PM no es un truco recomendado simple
+                if (selectedName) {
+                    pm_staticElement = staticElementsForPM.find(s => s.originalStatic === selectedName) || null;
+                    if (pm_staticElement) {
+                        selectedPowerMoveModifier = staticModifiers.find(m => m.name === "Full").value;
+                        selectedPowerMoveExtra = 0;
+                        // Mostrar panel de añadir recomendado para el PM configurado
+                        const placeholder = document.getElementById(`powermovesRecommendedControlsPlaceholder`);
+                        if (placeholder) {
+                            placeholder.appendChild(recommendedTrickAddControlsSection);
+                            recommendedTrickAddControlsSection.style.display = 'block';
+                            addRecommendedTrickTitleElement.textContent = `Afegir PowerMove Configurat`;
+                            selectedRecommendedTrickDisplayElement.textContent = `PM: ${capitalize(pm_category)} ${pm_exercise} ${pm_staticElement.originalStatic}`;
+                        }
+                    } else {
+                         hideAndResetRecommendedControls(); // Si se deselecciona el elemento base
+                    }
+                } else { pm_staticElement = null; hideAndResetRecommendedControls(); }
+                buildPowerMoveSelectors(); // Reconstruir para mostrar/ocultar mod/extra
+                updateUIForCurrentTab();
+            });
+            container.appendChild(staticElementSelect);
+        }
+        
+        if (pm_staticElement) {
+            const pmModifierLabel = document.createElement('label'); pmModifierLabel.className = 'label-modern';
+            pmModifierLabel.textContent = "Modificador PM:"; container.appendChild(pmModifierLabel);
+            const pmModifierSelect = createSelectWithOptionsForPM(staticModifiers, selectedPowerMoveModifier, m => `${m.name} (x${m.value})`, m => m.value, (val) => selectedPowerMoveModifier = Number(val));
+            container.appendChild(pmModifierSelect);
+
+            const pmExtraLabel = document.createElement('label'); pmExtraLabel.className = 'label-modern';
+            pmExtraLabel.textContent = "Extra PM:"; container.appendChild(pmExtraLabel);
+            const pmExtraSelect = createSelectWithOptionsForPM(extraPointOptions, selectedPowerMoveExtra, o => o.name, o => o.value, (val) => selectedPowerMoveExtra = Number(val));
+            container.appendChild(pmExtraSelect);
+        }
+        updateUIForCurrentTab();
+    }
+    
+    function createSelectForPM(optionsArray, placeholderText, currentValue, onChangeCallback) {
+        const select = document.createElement('select');
+        select.classList.add('select', 'modern-select');
+        const placeholder = document.createElement('option');
+        placeholder.value = ""; placeholder.textContent = placeholderText;
+        if (!currentValue) { placeholder.selected = true; placeholder.disabled = true; }
+        else { placeholder.disabled = false; }
+        select.appendChild(placeholder);
+        optionsArray.forEach(optVal => {
+            const option = document.createElement('option');
+            option.value = optVal; option.textContent = capitalize(optVal);
+            if (currentValue === optVal) option.selected = true;
+            select.appendChild(option);
+        });
+        select.addEventListener('change', (e) => onChangeCallback(e.target.value));
+        return select;
+    }
+    function createSelectWithOptionsForPM(optionsData, currentValue, textFn, valueFn, onChangeCallback) {
+        const select = document.createElement('select');
+        select.classList.add('select', 'modern-select');
+        optionsData.forEach(item => {
+            const option = document.createElement('option');
+            option.value = valueFn(item); option.textContent = textFn(item);
+            if (String(currentValue) === String(valueFn(item))) option.selected = true;
+            select.appendChild(option);
+        });
+        select.addEventListener('change', (e) => onChangeCallback(e.target.value));
+        return select;
+    }
+
+    function handleSaveParticipantScore() {
+        if (participantData[currentParticipant].tricks.length === 0 && participantData[currentParticipant].directScores.combos === 0) {
+            showToast(`No hi ha puntuacions per guardar per al Participant ${currentParticipant}.`, "error");
+            return;
+        }
+        const summaryData = {
+            participantId: currentParticipant,
+            difficulty: difficulty,
+            difficultyMultiplier: getDifficultyMultiplierVal(),
+            tricks: JSON.parse(JSON.stringify(participantData[currentParticipant].tricks)),
+            subtotals: {},
+            pmBonus: participantData[currentParticipant].pm_moreThan5Reps ? 1 : 0,
+            grandTotal: 0,
+        };
+        ['freestyle', 'statics', 'powermoves', 'balance', 'combos'].forEach(area => {
+            summaryData.subtotals[area] = parseFloat(document.getElementById(`${area}Subtotal`).textContent) || 0;
+        });
+        summaryData.grandTotal = parseFloat(totalScoreDisplay.textContent) || 0;
+        
+        savedScores[currentParticipant] = summaryData;
+        
+        displayScoreSummary(currentParticipant);
+        scoreSummarySection.style.display = 'block';
+        scoreSummarySection.classList.add('visible'); // Para animación
+        scoreSummarySection.scrollIntoView({ behavior: 'smooth' });
+        showToast(`Puntuació del Participant ${currentParticipant} finalitzada.`, "success");
+    }
+
+    function displayScoreSummary(participantId) {
+        const summary = savedScores[participantId];
+        if (!summary) return;
+        summaryParticipantNameElement.textContent = `Resum Participant ${participantId}`;
+        let tableHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Truc</th><th>Àrea</th><th>Base</th><th>Neteja</th>
+                        <th>Mod.</th><th>Extra</th><th>xDiff</th><th>xRep</th><th>Score Final</th>
+                    </tr>
+                </thead>
+                <tbody>`;
+        summary.tricks.forEach(trick => {
+            tableHTML += `
+                <tr>
+                    <td>${trick.displayName}</td>
+                    <td>${capitalize(trick.area)}</td>
+                    <td>${trick.basePoints.toFixed(2)}</td>
+                    <td>${trick.cleanScore}/10</td>
+                    <td>${trick.staticModifierName !== 'N/A' ? `${trick.staticModifierName} (x${trick.staticModifierValue.toFixed(2)})` : '-'}</td>
+                    <td>${trick.extraPointsValue.toFixed(2)}</td>
+                    <td>x${trick.difficultyMultiplierApplied.toFixed(2)}</td>
+                    <td>x${trick.repetitionFactor.toFixed(2)}</td>
+                    <td><strong>${trick.finalScore.toFixed(2)}</strong></td>
+                </tr>`;
+        });
+        tableHTML += `</tbody><tfoot>`;
+        Object.keys(summary.subtotals).forEach(area => {
+            let areaDisplayName = capitalize(area);
+            let subtotalValue = summary.subtotals[area];
+            if (area === "powermoves" && summary.pmBonus > 0) {
+                areaDisplayName += " (+1 Bonus Reps)";
+            }
+             tableHTML += `<tr><td colspan="8" style="text-align:right;">Subtotal ${areaDisplayName}:</td><td><strong>${subtotalValue.toFixed(2)}</strong></td></tr>`;
+        });
+        tableHTML += `<tr class="grand-total"><td colspan="8" style="text-align:right;">TOTAL PARTICIPANT (${participantId}):</td><td><strong>${summary.grandTotal.toFixed(2)}</strong></td></tr>`;
+        tableHTML += `</tfoot></table>`;
+        scoreTableContainer.innerHTML = tableHTML;
+    }
+
+    function handleDownloadCsv() {
+        const summary = savedScores[currentParticipant];
+        if (!summary) {
+            showToast("No hi ha resum per descarregar.", "error"); return;
+        }
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Truc,Àrea,Punts Base,Neteja,Modificador Nom,Modificador Valor,Punts Extra,Multiplicador Dificultat,Factor Repetició,Score Final Truc\r\n";
+        summary.tricks.forEach(trick => {
+            const row = [
+                `"${trick.displayName.replace(/"/g, '""')}"`, capitalize(trick.area),
+                trick.basePoints.toFixed(2), `${trick.cleanScore}/10`,
+                trick.staticModifierName, trick.staticModifierValue.toFixed(2),
+                trick.extraPointsValue.toFixed(2), trick.difficultyMultiplierApplied.toFixed(2),
+                trick.repetitionFactor.toFixed(2), trick.finalScore.toFixed(2)
+            ].join(",");
+            csvContent += row + "\r\n";
+        });
+        csvContent += "\r\n";
+        Object.keys(summary.subtotals).forEach(area => {
+            let areaDisplayName = capitalize(area);
+            if (area === "powermoves" && summary.pmBonus > 0) areaDisplayName += " (+1 Bonus Reps)";
+            csvContent += `Subtotal ${areaDisplayName},,,,,,,,,${summary.subtotals[area].toFixed(2)}\r\n`;
+        });
+        csvContent += `TOTAL PARTICIPANT ${summary.participantId} (Dificultat: ${summary.difficulty}),,,,,,,,,${summary.grandTotal.toFixed(2)}\r\n`;
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `puntuacion_participant_${summary.participantId}.csv`);
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        showToast("CSV descarregat!", "success");
+    }
+
+    function capitalize(s) {
+        if (typeof s !== 'string' || !s) return '';
+        return s.charAt(0).toUpperCase() + s.slice(1);
+    }
+    function showToast(message, type = 'info') {
+        toastNotification.textContent = message;
+        toastNotification.className = 'toast-notification ' + type; // Quita 'show' primero por si acaso
+        void toastNotification.offsetWidth; // Trigger reflow
+        toastNotification.classList.add('show');
+        
+        setTimeout(() => {
+            toastNotification.classList.remove('show');
+        }, 3000);
+    }
+
+    initialize();
+});
+

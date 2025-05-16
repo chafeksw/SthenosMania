@@ -692,8 +692,3 @@ body {
     .recommended-controls-placeholder { min-width: 100%; margin-top: 15px; }
 }
 
-.checkbox-grid-combos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* O ajusta según necesites */
-    gap: 10px; /* Espacio entre checkboxes */
-}

@@ -691,3 +691,280 @@ body {
     .recommended-tricks-area { flex-direction: column; }
     .recommended-controls-placeholder { min-width: 100%; margin-top: 15px; }
 }
+// Asegúrate de que este código se ejecuta después de que el DOM esté completamente cargado
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- REFERENCIAS A ELEMENTOS DEL DOM (EJEMPLOS) ---
+    // Powermoves
+    const recommendedPowermoveRepsGroup = document.getElementById('recommendedPowermoveRepsGroup');
+    const recommendedPowermoveRepsInput = document.getElementById('recommendedPowermoveReps');
+    const customPowermoveRepsInput = document.getElementById('customPowermoveReps');
+    const addCustomPowermovesTrickButton = document.getElementById('addCustomPowermovesTrickButton');
+    const pmMoreThan5RepsCheckbox = document.getElementById('pm_more_than_5_reps');
+    // Suponiendo que tienes un botón para añadir powermoves recomendados, similar a addRecommendedTrickButton
+    // const addRecommendedPowermoveButton = document.getElementById('addRecommendedTrickButton'); // Asegúrate de que este botón maneje el contexto
+
+    // Combos
+    const comboCheckboxes = document.querySelectorAll('#tabContentCombos .custom-checkbox[data-category]'); // Usar data-category para identificarlos
+    const applyComboPerfectionButton = document.getElementById('applyComboPerfection');
+    const applyComboPenaltyButton = document.getElementById('applyComboPenalty');
+    const calculateComboScoreButton = document.getElementById('calculateComboScore'); // Nuevo botón
+    const combosSubtotalSpan = document.getElementById('combosSubtotal');
+
+    // General
+    const tricksListUL = document.getElementById('tricksList');
+    const totalScoreSpan = document.getElementById('totalScore');
+    // ... otras referencias que necesites ...
+
+    // --- LÓGICA PARA POWERMOVES ---
+
+    // Ejemplo: Gestionar visibilidad del input de repeticiones para powermoves recomendados
+    // Esto dependerá de cómo gestionas la selección de trucos recomendados.
+    // Si 'recommendedTrickAddControlsSection' se usa para todos, necesitas una lógica
+    // para mostrar/ocultar 'recommendedPowermoveRepsGroup' cuando la pestaña Powermoves esté activa.
+    // Por ejemplo, al hacer clic en un botón de un powermove recomendado:
+    /*
+    function onSelectRecommendedPowermove(trickData) {
+        // ... tu lógica actual para rellenar nombre, etc. ...
+        document.getElementById('selectedRecommendedTrickDisplay').textContent = `Seleccionat: ${trickData.name}`;
+        if (currentActiveTab === 'powermoves') { // Necesitas una variable que guarde la pestaña activa
+            recommendedPowermoveRepsGroup.style.display = 'block';
+        } else {
+            recommendedPowermoveRepsGroup.style.display = 'none';
+        }
+        recommendedTrickAddControlsSection.style.display = 'block'; // Mostrar el panel de control
+    }
+    */
+
+    // Función para calcular puntos de PowerMove
+    function calculatePowermoveScore(baseCost, repetitions, cleanliness) {
+        let points = 0;
+        const cost = parseFloat(baseCost);
+        const reps = parseInt(repetitions);
+
+        if (isNaN(cost) || isNaN(reps) || cost <= 0 || reps <= 0) {
+            return 0;
+        }
+
+        for (let i = 1; i <= reps; i++) {
+            if (i <= 3) {
+                points += cost;
+            } else if (i === 4) {
+                points += cost * 0.80; // 80%
+            } else if (i === 5) {
+                points += cost * 0.60; // 60%
+            }
+            // Para más de 5 repeticiones, no suman individualmente aquí.
+            // El bonus de +1p por pm_more_than_5_reps se manejará por separado si está marcado.
+        }
+
+        // Aplicar multiplicador de limpieza (ej: 1-10 -> 0.1-1.0)
+        const cleanlinessFactor = Math.max(0.1, Math.min(1, parseFloat(cleanliness) / 10));
+        let finalScore = points * cleanlinessFactor;
+
+        // Bonificación por checkbox "> 5 reps"
+        if (pmMoreThan5RepsCheckbox.checked && reps > 5) {
+            finalScore += 1;
+        }
+        
+        return parseFloat(finalScore.toFixed(2));
+    }
+
+    // Event Listener para añadir PowerMove Personalizado
+    if (addCustomPowermovesTrickButton) {
+        addCustomPowermovesTrickButton.addEventListener('click', () => {
+            const name = document.getElementById('customPowermovesTrickName').value.trim();
+            const baseCost = document.getElementById('customPowermovesTrickCost').value;
+            const cleanliness = document.getElementById('customPowermovesTrickCleanliness').value;
+            const reps = customPowermoveRepsInput.value;
+
+            if (!name || !baseCost || !cleanliness || !reps) {
+                showToast("Completa tots els camps del PowerMove personalitzat.", "error");
+                return;
+            }
+
+            const points = calculatePowermoveScore(baseCost, reps, cleanliness);
+            const trickDetails = `${name} (${reps} reps, Neteja: ${cleanliness}/10)`;
+            
+            addTrickToParticipantList('powermoves', trickDetails, points);
+            updatePowermovesSubtotal(points); // Necesitas una función para actualizar este subtotal
+            updateTotalScore(); // Necesitas una función para actualizar el total general
+            
+            // Limpiar campos
+            document.getElementById('customPowermovesTrickName').value = '';
+            document.getElementById('customPowermovesTrickCost').value = '';
+            document.getElementById('customPowermovesTrickCleanliness').value = '10';
+            customPowermoveRepsInput.value = '1';
+            pmMoreThan5RepsCheckbox.checked = false; // Resetear checkbox de bonus también
+            showToast("PowerMove personalitzat afegit!", "success");
+        });
+    }
+    
+    // Deberás adaptar tu función actual `addRecommendedTrickButton` listener
+    // para que cuando se añada un PowerMove recomendado, use `recommendedPowermoveRepsInput.value`
+    // y la función `calculatePowermoveScore`.
+
+
+    // --- LÓGICA PARA COMBOS ---
+    let comboBaseScore = 0;
+    let comboPerfectionBonus = 0;
+    let comboPenalty = 0;
+
+    function updateComboUIDisplay() {
+        const totalComboPoints = comboBaseScore + comboPerfectionBonus - comboPenalty;
+        combosSubtotalSpan.textContent = totalComboPoints.toFixed(2);
+    }
+
+    if (calculateComboScoreButton) {
+        calculateComboScoreButton.addEventListener('click', () => {
+            comboBaseScore = 0;
+            comboCheckboxes.forEach(checkbox => {
+                if (checkbox.checked) {
+                    comboBaseScore += 1; // Cada checkbox marcado suma 1 punto
+                }
+            });
+            // El bonus de perfección y la penalización se aplican por separado
+            // Aquí solo calculamos el subtotal base de los checkboxes
+            // y lo sumamos a los bonus/penalizaciones ya aplicados
+            updateComboUIDisplay();
+            // Finalmente, para registrar este puntaje como un "truco" o actualizar el total general:
+            // Esto podría añadir una entrada a la lista de trucos o directamente actualizar el total.
+            // Por ahora, solo actualiza el subtotal de combos.
+            // Si quieres que se añada a la lista:
+            // addTrickToParticipantList('combos', `Puntuació Combo`, comboBaseScore + comboPerfectionBonus - comboPenalty);
+            // updateTotalScore(); // Actualiza el total general si Combos aporta al total.
+             showToast(`Punts de combo calculats: ${ (comboBaseScore + comboPerfectionBonus - comboPenalty).toFixed(2)}`, "info");
+        });
+    }
+
+    if (applyComboPerfectionButton) {
+        applyComboPerfectionButton.addEventListener('click', () => {
+            if (comboPerfectionBonus === 0) { // Aplicar solo una vez o resetear si se quiere
+                comboPerfectionBonus = 1;
+                applyComboPerfectionButton.classList.add('active'); // Opcional: feedback visual
+                 showToast("Punt extra per perfecció aplicat! (+1p)", "success");
+            } else {
+                comboPerfectionBonus = 0; // Permitir quitarlo
+                applyComboPerfectionButton.classList.remove('active');
+                showToast("Punt extra per perfecció eliminat.", "info");
+            }
+            updateComboUIDisplay();
+        });
+    }
+
+    if (applyComboPenaltyButton) {
+        applyComboPenaltyButton.addEventListener('click', () => {
+             if (comboPenalty === 0) { // Aplicar solo una vez o resetear si se quiere
+                comboPenalty = 0.5;
+                applyComboPenaltyButton.classList.add('active'); // Opcional: feedback visual
+                showToast("Penalització per neteja baixa aplicada. (-0.5p)", "error");
+            } else {
+                comboPenalty = 0; // Permitir quitarlo
+                applyComboPenaltyButton.classList.remove('active');
+                showToast("Penalització per neteja baixa eliminada.", "info");
+            }
+            updateComboUIDisplay();
+        });
+    }
+    
+    let participantScores = { A: { tricks: [], total: 0, subtotals: {} }, B: { tricks: [], total: 0, subtotals: {} } };
+    let currentParticipant = 'A'; // o 'B'
+
+    function addTrickToParticipantList(area, description, points) {
+        const participantData = participantScores[currentParticipant];
+        participantData.tricks.push({ area, description, points });
+
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+            <div class="trick-info">
+                <span class="trick-name">${description}</span>
+                <span class="trick-details">${area.toUpperCase()} - ${points.toFixed(2)} pts</span>
+            </div>
+            <button class="button button-destructive small-btn remove-trick-btn">Eliminar</button>
+        `;
+        // Añadir event listener al botón de eliminar aquí
+        
+        const noTricksMessage = tricksListUL.querySelector('.no-tricks');
+        if (noTricksMessage) {
+            noTricksMessage.remove();
+        }
+        tricksListUL.appendChild(listItem);
+        document.getElementById('tricksCount').textContent = participantData.tricks.length;
+    }
+
+    function updatePowermovesSubtotal(pointsToAdd) {
+        // Actualiza el subtotal de powermoves y el total general
+        // Necesitas mantener un registro de los subtotales por categoría
+        const subtotalEl = document.getElementById('powermovesSubtotal');
+        let currentSubtotal = parseFloat(subtotalEl.textContent) || 0;
+        currentSubtotal += pointsToAdd;
+        subtotalEl.textContent = currentSubtotal.toFixed(2);
+    }
+    
+    function updateTotalScore() {
+        // Recalcula el total general sumando todos los trucos o subtotales
+        let grandTotal = 0;
+        participantScores[currentParticipant].tricks.forEach(trick => {
+            grandTotal += trick.points;
+        });
+        // O si sumas subtotales:
+        // grandTotal = (parseFloat(document.getElementById('freestyleSubtotal').textContent) || 0) + ...
+        totalScoreSpan.textContent = grandTotal.toFixed(2);
+    }
+
+    function showToast(message, type = 'info') {
+        const toast = document.getElementById('toastNotification');
+        if (!toast) return;
+        toast.textContent = message;
+        toast.className = 'toast-notification show'; // Reset classes
+        if (type === 'success') toast.classList.add('success');
+        else if (type === 'error') toast.classList.add('error');
+        else if (type === 'info') toast.classList.add('info');
+
+        setTimeout(() => {
+            toast.className = 'toast-notification';
+        }, 3000);
+    }
+    */
+
+    // --- Lógica para cambiar de pestañas (muy simplificado) ---
+    // Deberías tener algo así para que `currentActiveTab` funcione
+    /*
+    let currentActiveTab = 'freestyle'; // Pestaña inicial
+    const tabTriggers = document.querySelectorAll('.tab-trigger');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+            const tabName = trigger.dataset.tab;
+            
+            tabTriggers.forEach(t => t.classList.remove('active'));
+            trigger.classList.add('active');
+            
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+                if (content.id === `tabContent${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`) {
+                    content.classList.add('active');
+                }
+            });
+            currentActiveTab = tabName;
+
+            // Lógica para mostrar/ocultar controles de powermoves si la pestaña activa es powermoves
+            if (currentActiveTab === 'powermoves') {
+                 // Mueve o clona recommendedTrickAddControlsSection al placeholder de powermoves si es necesario
+                const placeholder = document.getElementById('powermovesRecommendedControlsPlaceholder');
+                const controls = document.getElementById('recommendedTrickAddControlsSection');
+                if (placeholder && controls && !placeholder.contains(controls)) {
+                    // placeholder.innerHTML = ''; // Limpiar por si acaso
+                    // placeholder.appendChild(controls); // Moverlo
+                }
+                // Y luego, si un truco recomendado está seleccionado, muestra el input de reps
+                // (esto se haría en la lógica de selección de truco)
+            } else {
+                 recommendedPowermoveRepsGroup.style.display = 'none'; // Ocultar si no es powermoves
+            }
+        });
+    });
+    */
+
+}); // Fin de DOMContentLoaded
